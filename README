@@ -1,0 +1,22 @@
+Alp Dener, Spring 2013, C/C++
+_________________________________________________________________________________
+Linear Elastic Computational Structural Analysis Program
+
+Developed for the Spring 2013 MANE6680 Finite Element Programming course taught
+by Prof. Mark Shephard at Rensselaer Polytechnic Institute. Capable of calculating 
+structural node displacements for 1-D or 2-D, structured or unstructured, linear 
+or quadratic meshes as a result of nodal, edge or body loading. Allows prescribing
+nodal displacements as boundary conditions.
+_________________________________________________________________________________
+Dependencies (to be stripped later...):
+
+- Finite Element Mesh Database
+- Zoltan
+- MPI
+- ParMetis
+- Metis
+- IPComMan
+_________________________________________________________________________________
+Notes:
+
+05/11/2013 | *** ONLY WORKS ON RPI CCNI SYSTEMS UNTIL FURTHER NOTICE***
