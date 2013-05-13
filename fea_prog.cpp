@@ -6,17 +6,15 @@
  */
 
 #include <stdio.h>
-#include "./fea_prog.h"
+#include "./fea_prog.hpp"
+#include "./1D_mesh_tools.hpp"
+#include "./setup_eq.hpp"
 using namespace std;
 
 // =====================================================================
 
 void FEA(Mesh nozzle, double props, double P,
-         vector< vector<double> > D,
-         vector< vector<int> > ntyp,
-         vector< vector<double> > FG,
-         vector<double> f_init,
-         double P)
+         vector< vector<double> > FG)
 {
   // Core Finite Element Analaysis procedure.
   //
@@ -35,11 +33,13 @@ void FEA(Mesh nozzle, double props, double P,
   int nel = nozzle.nel;
 
   // Initialize the problem equation.
+  printf("Setting up global equation mapping...\n")
   vector< vector< vector<double> > > id(nsd, vector< vector<double> >(nnp, vector<double>(2)));
   vector<double> G;
   vector<double> F;
   int ndof, ndog;
   setup_eq(nozzle, FG, id, G, F, ndof, ndog)
+  printf("DONE\n")
   printf("Allocating global stiffness matrix...\n");
   vector< vector<double> > K(ndof, vector<double>(ndof));
   for (int a = 0; a < ndof; a++)
@@ -48,20 +48,28 @@ void FEA(Mesh nozzle, double props, double P,
       {K[a][b]=0;} // Zero out the global stiffness matrix
   }
   printf("DONE\n");
-  printf("Governing equation initialized.\n");
+
+  // Recover material/geometric properties
+  double E = props[0];
+  double w = props[1];
+  double t = props[2];
+
 
   // Loop over all elements, assuming that each face is an element.
   printf("Starting element iteration...\n");
   Element elem;
   for (int i=0; i<nel; i++)
   {
-    // Get the element stiffness matrix.
+    // Get information about the element.
     elem = nozzle.allElems[i];
-    printf("Element Number: %i\n", elem.id);
+    int nen = elem.nen;
     int nee = nen*2;
+    printf("Constructing the element stiffness matrix and force vector...\n");
+    vector< vector< vector<double> > > lm(nsd, vector< vector<double> >(nen, vector<double>(2)));
     vector< vector<double> > KE(nee, vector<double>(nee));
     vector<double> FE(nee);
-    elem.GetStiff(E, w, t, P, KE, FE);
+    elem.GetStiff(E, w, t, P, id, lm, KE, FE);
+    printf("DONE\n")
 
     // Assemble the element contributions into the global matrices.
     printf("Assembling the element contributions into global matrices...\n");
@@ -69,17 +77,10 @@ void FEA(Mesh nozzle, double props, double P,
     printf("DONE\n");
 
     // Clear vectors
-    ien.clear();
-    weights.clear();
-    intPts.clear();
-    nodeCoords.clear();
     lm.clear();
     KE.clear();
     FE.clear();
-    Se.clear();
-    iterEnd = FMDB_PartEntIter_GetNext(iter, elem);
   }// finish looping over elements
-  FMDB_PartEntIter_Del(iter);
   printf("Element iteration complete!\n");
 
   // Print matrices for inspection.
@@ -100,46 +101,9 @@ void FEA(Mesh nozzle, double props, double P,
     {printf("|  %f  |\n", disp[n]);}
 
   // Print out the node displacements.
-  vector<double> nodeDisp(2);
+  vector< vector<double> > nodeDisp(nnp, vector<double>(2));
   printf("Outputting displacements...\n");
-  output_disp(nnp, nsd, G, id, disp, nodeDisp);
+  output_disp(nnp, G, id, disp, nodeDisp);
 
-  // Calculate and print out stresses/fluxes.
-  printf("Calculating stresses at each element...\n");
-  FMDB_PartEntIter_Init(part, FMDB_FACE, FMDB_ALLTOPO, iter);
-  iterEnd = FMDB_PartEntIter_GetNext(iter, elem);
-  while(!iterEnd)
-  {
-    // Get information about the element.
-    elemID = FMDB_Ent_ID(elem);
-    printf("Element Number: %i\n", elemID);
-    int nint, nen, nee;
-    Elem_CheckType(elem, nint, nen);
-    nee = nen*nsd;
-    vector<int> ien(nen);
-    vector<double> weights(nint);
-    vector< vector<double> > intPts(nint, vector<double>(nsd));
-    vector< vector<double> > nodeCoords(nen, vector<double>(nsd));
-    Elem_GetInfo(elem, nsd, nen, nint, nee, ien, weights, intPts, nodeCoords);
-    // Calculate the element stress vector.
-    vector<double> SIG(3);
-    vector< vector< vector<double> > > lm(nsd, vector< vector<double> >(nen, vector<double>(2)));
-    out_flux(nsd, nen, nint, ien, id, S[elemID], disp, G, lm, SIG);
-
-    // Print out the results.
-    printf("    Stresses at element %d:\n", elemID);
-    for (int n = 0; n < 3; n++)
-      {printf("|  %f  |\n", SIG[n]);}
-
-    iterEnd = FMDB_PartEntIter_GetNext(iter, elem);
-    ien.clear();
-    weights.clear();
-    intPts.clear();
-    lm.clear();
-    nodeCoords.clear();
-    SIG.clear();
-  }// finish looping over elements
-  FMDB_PartEntIter_Del(iter);
-  printf("DONE\n");
   printf("SUCCESS: Finite Element Analysis complete!\n");
 }

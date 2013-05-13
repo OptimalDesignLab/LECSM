@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-#include "./setup_eq.h"
+#include "./setup_eq.hpp"
 using namespace std;
 
 // ======================================================================

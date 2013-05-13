@@ -137,3 +137,67 @@ void Element::GetStiff(double E, double w, double t, double P,
   FE[2] += nodeR.forceBC[2];
   FE[3] += nodeR.forceBC[3];
 }
+
+// =====================================================================
+
+void Element::assemble(vector< vector< vector<double> > > lm,
+                       vector< vector<double> > KE,
+                       vector<double> FE, vector<double>& G,
+                       vector< vector<double> >& K,
+                       vector<double>& F)
+{
+  // This procedure assemples the element contributions into
+  // the global matrices.
+  //
+  // Inputs:
+  //    nsd             - number of space dimensions
+  //    nen             - number of element nodes
+  //    lm              - element location vector, identifying the
+  //                      equation numbers and the location of
+  //                      essential BCs for the element
+  //    KE              - element stiffness matrix
+  //    FE              - element force vector
+  //    G               - global prescribed displacement vector
+  // Outputs:
+  //    K               - global stiffness matrix
+  //    F               - global force matrix
+  //
+  printf("    Testing lm values:\n");
+  for (int c = 0;c<2;c++)
+  {
+    for (int a = 0;a<nen;a++)
+    { 
+      for (int b = 0;b<nsd;b++)
+      { 
+        printf("      lm[%i][%i][%i]=%f \n",b,a,c,lm[b][a][c]);
+      }
+    }
+    printf("      --------------------\n");
+  }
+  int p = 0;
+  for (int a = 0; a < nen; a++)
+  {
+    for (int i = 0; i < nsd; i++)
+    {
+      if (lm[i][a][0] == 1) // dof
+      {
+        int P = lm[i][a][1];
+        F[P] = F[P] + FE[p];
+        int q = 0;
+        for (int b = 0; b < nen; b++)
+        {
+          for (int j = 0; j < nsd; j++)
+          {
+            int Q = lm[j][b][1];
+            if (lm[j][b][0] == 1) // dof
+              {K[P][Q] = K[P][Q] + KE[p][q];}
+            else if (lm[j][b][0] == 2) // dog
+              {F[P] = F[P] - G[Q]*KE[p][q];}
+            q++;
+          } // end j loop over nsd
+        } // end b loop over nen (columns)
+      }
+      p++;
+    } // end i loop over nsd
+  } // end a loop over nen (rows)
+}

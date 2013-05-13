@@ -7,16 +7,3 @@ by Prof. Mark Shephard at Rensselaer Polytechnic Institute. Capable of calculati
 structural node displacements for 1-D or 2-D, structured or unstructured, linear 
 or quadratic meshes as a result of nodal, edge or body loading. Allows prescribing
 nodal displacements as boundary conditions.
-_________________________________________________________________________________
-Dependencies (to be stripped later...):
-
-- Finite Element Mesh Database
-- Zoltan
-- MPI
-- ParMetis
-- Metis
-- IPComMan
-_________________________________________________________________________________
-Notes:
-
-05/11/2013 | *** ONLY WORKS ON RPI CCNI SYSTEMS UNTIL FURTHER NOTICE***
