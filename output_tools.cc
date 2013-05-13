@@ -25,12 +25,15 @@ void output_disp(int nnp, vector<double> G,
   //                        stores the type of DoG and the equation number
   //    disp              - global displacement vector
   // Outputs:
-  //    nodeDisp          - displacement at a particular node
-  //
+  //    nodeDisp          - nodal displacement vector
+  printf("Directions:\n");
+  printf("  0 - x-axis\n");
+  printf("  1 - y-axis\n");
+  printf("  2 - rotation about z-axis\n");
   vector<double> nd(2);
   for (int A = 0; A < nnp; A++)
   {
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
       int t = id[i][A][0];
       double P = id[i][A][1];

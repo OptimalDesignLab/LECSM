@@ -12,14 +12,14 @@ using namespace std;
 class Node {
 public:
 	int id;
-	int type[2];
+	int type[3]; // 0 for zero BC, 1 for free node, 2 for prescribed displacements
 	double coords[2];
-	double dispBC[2];
-	double forceBC[2];
+	double dispBC[3]; // 3 degrees of freedom per node (axial, trans, rotational)
+	double forceBC[3]; // forcing in two directions plus moment about the third
 
-	CreateNode();
-	CreateNode(int id_, int type_, double coords_);
-	DefineBCs(int BCtype, double BCval);
+	void CreateNode();
+	void CreateNode(int id_, int type_, double coords_);
+	void DefineBCs(int BCtype, double BCval);
 };
 
 // =====================================================================
@@ -30,13 +30,19 @@ public:
 	int nen;
 	vector<Node> adjNodes;
 
-	CreateElem();
+	void CreateElem();
 
-	CreateElem(int id_, vector<Node> nodes);
+	void CreateElem(int id_, vector<Node> nodes);
 
 	void GetStiff(double E, double w, double t, double P, 
-								vector< vector<double> >& KE,
-				  			vector<double>& FE);
+				  vector< vector<double> >& KE,
+				  vector<double>& FE);
+
+	void assemble(vector< vector< vector<double> > > lm,
+                  vector< vector<double> > KE,
+                  vector<double> FE, vector<double>& G,
+                  vector< vector<double> >& K,
+                  vector<double>& F)
 };
 
 // =====================================================================
@@ -48,6 +54,6 @@ public:
 	vector<Element> allElems;
 	vector<Node> allNodes;
 
-	CreateMesh();
-	CreateMesh(vector<Element> elems);
+	void CreateMesh();
+	void CreateMesh(vector<Element> elems);
 };

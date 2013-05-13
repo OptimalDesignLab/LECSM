@@ -1,16 +1,20 @@
 Alp Dener, Spring 2013, C/C++
 _________________________________________________________________________________
-LINEAR ELASTIC COMPUTATIONAL STRUCTURAL ANALYSIS (2D TRUSS)
+LINEAR ELASTIC COMPUTATIONAL STRUCTURAL ANALYSIS (2D BEAM)
 
 Originally written for the Spring 2013 MANE6680 Finite Element Programming course 
 taught by Prof. Mark Shephard at Rensselaer Polytechnic Institute. Current version
-is specialized to compute node displacements in a 2D truss mesh due to distributed
-pressures on the truss. Finite Element Mesh Database (FMDB) dependency has been
-removed and replaced with a purpose-built object-oriented 1D mesh library.
+is specialized to compute node displacements in a mesh of 2D beam elements due to 
+distributed pressures on the structure.
 
-This code is being developed to be later coupled with Prof. Jason Hicken's
-Quasi 1D Euler solver and used as part of the MDA for multidisciplinary optimization
+This code is being developed for future coupling with Prof. Jason Hicken's
+Quasi 1D Euler solver as part of the MDA for multidisciplinary optimization 
 algorithms.
+_________________________________________________________________________________
+DEPENDENCIES:
++ Boost
++ Quasi 1D Euler solver
++ Kona (indirect)
 _________________________________________________________________________________
 TO DO LIST:
 
@@ -21,6 +25,10 @@ Use this to create the mesh.
 + Use Bspline::FitCurve to generate analytical Bspline from
 a set of X and Y coordinates, which is then interrogated by
 the flow solver for areas at particular X coordinates.
+
++ Write a pre-processing function that creates a vector of
+pressure values per element based on the Quasi 1D Euler solver's
+output
 
 + Finish writing header files.
 

@@ -49,7 +49,7 @@ void setup_eq(Mesh nozzle, vector< vector<double> >FG,
   {
     nd = mesh.allNodes[b];
     a = nd.id;
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < 3; i++)
     {
       if (nd.type[i]==1)       // DoF - possible nodal load
       {
@@ -75,18 +75,18 @@ void setup_eq(Mesh nozzle, vector< vector<double> >FG,
       }
     } // end loop over possible dof at node
   } // end loop over nodes
-  printf("DONE\n");
-  printf("    Testing id values:\n");
-  for (int c = 0; c < 2; c++)
-  {
-    for (int a = 0; a < nnp; a++)
-    { 
-      for (int b = 0; b < nsd; b++)
-      { 
-        printf("      id[%i][%i][%i]=%f \n",b,a,c,id[b][a][c]);
-      }
-    }
-    printf("      --------------------\n");
-  }
-  printf("DONE\n");
-} // end of setup_eq
+  // printf("DONE\n");
+  // printf("    Testing id values:\n");
+  // for (int c = 0; c < 2; c++)
+  // {
+  //   for (int a = 0; a < nnp; a++)
+  //   { 
+  //     for (int b = 0; b < 3; b++)
+  //     { 
+  //       printf("      id[%i][%i][%i]=%f \n",b,a,c,id[b][a][c]);
+  //     }
+  //   }
+  //   printf("      --------------------\n");
+  // }
+  // printf("DONE\n");
+}

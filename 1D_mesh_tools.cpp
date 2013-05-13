@@ -8,28 +8,29 @@
 #include <stdio.h>
 #include <math.h>
 #include "./1D_mesh_tools.hpp"
+#include "./matrix_tools.hpp"
 using namespace std;
 
 // =====================================================================
 
-Node::CreateNode() {
+void Node::CreateNode() {
   id = -1;
   type = -1;
 }
 
-Node::CreateNode(int id_, int type_, double coords_) {
+void Node::CreateNode(int id_, int type_, double coords_) {
   id = id_;
   type = 1; // node is free to move by default
   coords = coords_;
   dispBC = NULL;
-  forceBC = {0,0};
+  forceBC = {0,0,0};
 }
 
-Node::DefineBCs(int BCtype, double BCval) {
+void Node::DefineBCs(int BCtype, double BCval) {
   if (BCtype == 0) { // displacement BC
     if (BCval == NULL) { // zero BC
       type = 0;
-      dispBC = {0,0};
+      dispBC = {0,0,0};
     }
     else { // non-zero BC
       type = 2;
@@ -43,12 +44,12 @@ Node::DefineBCs(int BCtype, double BCval) {
 
 // =====================================================================
 
-Element::CreateElem() {
+void Element::CreateElem() {
   id = -1;
   nen = 0;
 }
 
-Element::CreateElem(int id_, vector<Node> nodes) {
+void Element::CreateElem(int id_, vector<Node> nodes) {
   id = id_;
   nen = nodes.size();
   adjNodes = nodes;
@@ -56,12 +57,12 @@ Element::CreateElem(int id_, vector<Node> nodes) {
 
 // =====================================================================
 
-Mesh::CreateMesh() {
+void Mesh::CreateMesh() {
   nnp = 0;
   nel = 0;
 }
 
-Mesh::CreateMesh(vector<Element> elems) {
+void Mesh::CreateMesh(vector<Element> elems) {
   allElems = elems;
   nel = allElems.size();
   nnp = 0;
@@ -95,7 +96,11 @@ void Element::GetStiff(double E, double w, double t, double P,
   lm[1][0][1] = id[1][nodeL.id][1];
   lm[1][1][0] = id[1][nodeR.id][0];
   lm[1][1][1] = id[1][nodeR.id][1];
-  // Calculate the element stiffness matrix
+  lm[2][0][0] = id[1][nodeL.id][0];
+  lm[2][0][1] = id[1][nodeL.id][1];
+  lm[2][1][0] = id[1][nodeR.id][0];
+  lm[2][1][1] = id[1][nodeR.id][1];
+  // Calculate the local element stiffness matrix
   double x1 = nodeL.coords[0];
   double y1 = nodeL.coords[1];
   double x2 = nodeR.coords[0];
@@ -103,39 +108,83 @@ void Element::GetStiff(double E, double w, double t, double P,
   double len = sqrt(pow(x2-x1,2) + pow(y2-y1,2));
   double c = (x2 - x1)/len;
   double s = (y2 - y1)/len;
-  double A = w*t;     // cross section area of the element
-  double blk[2][2];
-  blk[0][0] = E*A*pow(c,2)/len;
-  blk[0][1] = E*A*c*s/len;
-  blk[1][0] = E*A*c*s/len;
-  blk[1][1] = E*A*pow(s,2)/len;
-  for (int i=0; i<4; i++) {
-    if (i < 2) {
-      KE[i][0] = blk[i][0];
-      KE[i][1] = blk[i][1];
-      KE[i][2] = -blk[i][0];
-      KE[i][3] = -blk[i][1];
-    }
-    else {
-      KE[i][0] = -blk[i][0];
-      KE[i][1] = -blk[i][1];
-      KE[i][2] = blk[i][0];
-      KE[i][3] = blk[i][1];
+  double A = w*t; // cross section area of the element
+  double I = w*pow(h,3)/12 // area moment of inertia of the beam element x-section
+  vector< vector<double> > KEloc(6, vector<double>(6));
+  KEloc[0][0] = A*E/len;
+  KEloc[0][1] = 0;
+  KEloc[0][2] = 0;
+  KEloc[0][3] = -A*E/len;
+  KEloc[0][4] = 0;
+  KEloc[0][5] = 0;
+  KEloc[1][0] = 0;
+  KEloc[1][1] = 12*E*I/pow(len,3);
+  KEloc[1][2] = 6*E*I/pow(len,2);
+  KEloc[1][3] = 0;
+  KEloc[1][4] = -12*E*I/pow(len,3);
+  KEloc[1][5] = 6*E*I/pow(len,2);
+  KEloc[2][0] = 0;
+  KEloc[2][1] = 6*E*I/pow(len,2);
+  KEloc[2][2] = 4*E*I/len;
+  KEloc[2][3] = 0;
+  KEloc[2][4] = -6*E*I/pow(len,2);
+  KEloc[2][5] = 2*E*I/len;
+  KEloc[3][0] = -A*E/len;
+  KEloc[3][1] = 0;
+  KEloc[3][2] = 0;
+  KEloc[3][3] = A*E/len;
+  KEloc[3][4] = 0;
+  KEloc[3][5] = 0;
+  KEloc[4][0] = 0;
+  KEloc[4][1] = -12*E*I/pow(len,3);
+  KEloc[4][2] = -6*E*I/pow(len,2);
+  KEloc[4][3] = 0;
+  KEloc[4][4] = 12*E*I/pow(len,3);
+  KEloc[4][5] = -6*E*I/pow(len,2);
+  KEloc[5][0] = 0;
+  KEloc[5][1] = 6*E*I/pow(len,2);
+  KEloc[5][2] = 2*E*I/len;
+  KEloc[5][3] = 0;
+  KEloc[5][4] = -6*E*I/pow(len,2);
+  KEloc[5][5] = 4*E*I/len;
+  // Create the local to global transformation matrix
+  vector< vector<double> > T(6, vector<double>(6))
+  for (int i=0; i<6; i++) {
+    for (int j=0; j<6; j++) {
+      T[i][j] = 0;
     }
   }
+  T[0][0] = c;
+  T[0][1] = s;
+  T[1][0] = -s;
+  T[1][1] = c;
+  T[2][2] = 1;
+  T[3][3] = c;
+  T[3][4] = s;
+  T[4][3] = -s;
+  T[4][4] = c;
+  T[5][5] = 1;
+  // Calculate the global element stiffness matrix
+  vector< vector<double> > Tt(6, vector<double>(6))
+  matrixTranspose(T, 6, 6, Tt);
+  vector< vector<double> > KT(6, vector<double>(6))
+  matrixMult(KEloc, 6, 6, T, 6, 6, KT);
+  matrixMult(Tt, 6, 6, KT, 6, 6, KE);
   // Create the element forcing vector due to pressure
+  // Add in the nodal force contributions
   double f_hat = -P[id]*len*w/2;
   double fy = f_hat*c;
   double fx = f_hat*s;
-  FE[0] = fx;
-  FE[1] = fy;
-  FE[2] = fx;
-  FE[3] = fy;
-  // Add in nodal force contributions
-  FE[0] += nodeL.forceBC[0];
-  FE[1] += nodeL.forceBC[1];
-  FE[2] += nodeR.forceBC[2];
-  FE[3] += nodeR.forceBC[3];
+  FE[0] = fx + nodeL.forceBC[0];
+  FE[1] = fy + nodeL.forceBC[1];
+  FE[2] = nodeL.forceBC[2];
+  FE[3] = fx + nodeR.forceBC[0];
+  FE[4] = fy + nodeR.forceBC[1];
+  FE[5] = nodeR.forceBC[2];
+  // Clean-up
+  T.clear();
+  Tt.clear();
+  KEloc.clear();
 }
 
 // =====================================================================
@@ -177,7 +226,7 @@ void Element::assemble(vector< vector< vector<double> > > lm,
   int p = 0;
   for (int a = 0; a < nen; a++)
   {
-    for (int i = 0; i < nsd; i++)
+    for (int i = 0; i < 3; i++)
     {
       if (lm[i][a][0] == 1) // dof
       {
@@ -186,7 +235,7 @@ void Element::assemble(vector< vector< vector<double> > > lm,
         int q = 0;
         for (int b = 0; b < nen; b++)
         {
-          for (int j = 0; j < nsd; j++)
+          for (int j = 0; j < 3; j++)
           {
             int Q = lm[j][b][1];
             if (lm[j][b][0] == 1) // dof

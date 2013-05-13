@@ -34,7 +34,7 @@ void FEA(Mesh nozzle, double props, double P,
 
   // Initialize the problem equation.
   printf("Setting up global equation mapping...\n")
-  vector< vector< vector<double> > > id(nsd, vector< vector<double> >(nnp, vector<double>(2)));
+  vector< vector< vector<double> > > id(nsd, vector< vector<double> >(nnp, vector<double>(3)));
   vector<double> G;
   vector<double> F;
   int ndof, ndog;
@@ -54,7 +54,6 @@ void FEA(Mesh nozzle, double props, double P,
   double w = props[1];
   double t = props[2];
 
-
   // Loop over all elements, assuming that each face is an element.
   printf("Starting element iteration...\n");
   Element elem;
@@ -63,17 +62,17 @@ void FEA(Mesh nozzle, double props, double P,
     // Get information about the element.
     elem = nozzle.allElems[i];
     int nen = elem.nen;
-    int nee = nen*2;
+    int nee = nen*3;
     printf("Constructing the element stiffness matrix and force vector...\n");
-    vector< vector< vector<double> > > lm(nsd, vector< vector<double> >(nen, vector<double>(2)));
+    vector< vector< vector<double> > > lm(nsd, vector< vector<double> >(nen, vector<double>(3)));
     vector< vector<double> > KE(nee, vector<double>(nee));
     vector<double> FE(nee);
     elem.GetStiff(E, w, t, P, id, lm, KE, FE);
     printf("DONE\n")
-
+    
     // Assemble the element contributions into the global matrices.
     printf("Assembling the element contributions into global matrices...\n");
-    assemble(nsd, nen, lm, KE, FE, G, K, F);
+    elem.assemble(lm, KE, FE, G, K, F);
     printf("DONE\n");
 
     // Clear vectors
