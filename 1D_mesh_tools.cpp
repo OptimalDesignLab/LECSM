@@ -7,60 +7,49 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <vector>
 #include "./1D_mesh_tools.hpp"
 #include "./matrix_tools.hpp"
 using namespace std;
 
 // =====================================================================
 
-void Node::CreateNode() {
-  id = -1;
-  type = -1;
+void Node::CreateNode(int num, double* c) {
+  id = num;
+  for (int i=0; i<3; i++) {
+    coords[i] = c[i];
+    type[i] = 1;            // node is initially free
+    dispBC[i] = NULL;       // no displacement BCs defined
+    forceBC[i] = 0;         // force and moment BCs are zero
+  }             
 }
 
-void Node::CreateNode(int id_, int type_, double coords_) {
-  id = id_;
-  type = 1; // node is free to move by default
-  coords = coords_;
-  dispBC = NULL;
-  forceBC = {0,0,0};
-}
-
-void Node::DefineBCs(int BCtype, double BCval) {
-  if (BCtype == 0) { // displacement BC
-    if (BCval == NULL) { // zero BC
-      type = 0;
-      dispBC = {0,0,0};
+void Node::DefineBCs(int* BCtype, double* BCval) {
+  for (int i=0; i<3; i++) {    // loop over the three dimensions of BCs
+    if (BCtype[i] == 0) {      // displacement BC
+      dispBC[i] = BCval[i];
+      if (BCval[i] == 0) {     // zero BC (fixed node)
+        type[i] = 0;
+      }
+      else {                   // non-zero BC (prescribed displacement)
+        type[i] = 2;
+      }
     }
-    else { // non-zero BC
-      type = 2;
-      dispBC = BCval;
+    else if (BCtype[i] == 1) { // force or moment BC
+      forceBC[i] = BCval[i];
     }
-  }
-  else { // nodal force BC
-    forceBC = BCval;
   }
 }
 
 // =====================================================================
 
-void Element::CreateElem() {
-  id = -1;
-  nen = 0;
-}
-
-void Element::CreateElem(int id_, vector<Node> nodes) {
-  id = id_;
+void Element::CreateElem(int num, vector<Node> nodes) {
+  id = num;
   nen = nodes.size();
   adjNodes = nodes;
 }
 
 // =====================================================================
-
-void Mesh::CreateMesh() {
-  nnp = 0;
-  nel = 0;
-}
 
 void Mesh::CreateMesh(vector<Element> elems) {
   allElems = elems;
@@ -69,7 +58,8 @@ void Mesh::CreateMesh(vector<Element> elems) {
   Element elem = allElems.at(0);
   Node nodeL = elem.adjNodes[0];
   Node nodeR = elem.adjNodes[1];
-  vector<Node> allNodes = {nodeL, nodeR};
+  allNodes.push_back(nodeL);
+  allNodes.push_back(nodeR);
   for (int i=1; i<nel; i++) {
     elem = allElems.at(i);
     allNodes.push_back(elem.adjNodes[1]);    
@@ -109,7 +99,7 @@ void Element::GetStiff(double E, double w, double t, double P,
   double c = (x2 - x1)/len;
   double s = (y2 - y1)/len;
   double A = w*t; // cross section area of the element
-  double I = w*pow(h,3)/12 // area moment of inertia of the beam element x-section
+  double I = w*pow(t,3)/12; // area moment of inertia of the beam element x-section
   vector< vector<double> > KEloc(6, vector<double>(6));
   KEloc[0][0] = A*E/len;
   KEloc[0][1] = 0;
@@ -148,7 +138,7 @@ void Element::GetStiff(double E, double w, double t, double P,
   KEloc[5][4] = -6*E*I/pow(len,2);
   KEloc[5][5] = 4*E*I/len;
   // Create the local to global transformation matrix
-  vector< vector<double> > T(6, vector<double>(6))
+  vector< vector<double> > T(6, vector<double>(6));
   for (int i=0; i<6; i++) {
     for (int j=0; j<6; j++) {
       T[i][j] = 0;
@@ -165,14 +155,14 @@ void Element::GetStiff(double E, double w, double t, double P,
   T[4][4] = c;
   T[5][5] = 1;
   // Calculate the global element stiffness matrix
-  vector< vector<double> > Tt(6, vector<double>(6))
+  vector< vector<double> > Tt(6, vector<double>(6));
   matrixTranspose(T, 6, 6, Tt);
-  vector< vector<double> > KT(6, vector<double>(6))
+  vector< vector<double> > KT(6, vector<double>(6));
   matrixMult(KEloc, 6, 6, T, 6, 6, KT);
   matrixMult(Tt, 6, 6, KT, 6, 6, KE);
   // Create the element forcing vector due to pressure
   // Add in the nodal force contributions
-  double f_hat = -P[id]*len*w/2;
+  double f_hat = -P*len*w/2;
   double fy = f_hat*c;
   double fx = f_hat*s;
   FE[0] = fx + nodeL.forceBC[0];
@@ -210,19 +200,19 @@ void Element::assemble(vector< vector< vector<double> > > lm,
   // Outputs:
   //    K               - global stiffness matrix
   //    F               - global force matrix
-  //
-  printf("    Testing lm values:\n");
-  for (int c = 0;c<2;c++)
-  {
-    for (int a = 0;a<nen;a++)
-    { 
-      for (int b = 0;b<nsd;b++)
-      { 
-        printf("      lm[%i][%i][%i]=%f \n",b,a,c,lm[b][a][c]);
-      }
-    }
-    printf("      --------------------\n");
-  }
+
+  // printf("    Testing lm values:\n");
+  // for (int c = 0;c<2;c++)
+  // {
+  //   for (int a = 0;a<nen;a++)
+  //   { 
+  //     for (int b = 0;b<3;b++)
+  //     { 
+  //       printf("      lm[%i][%i][%i]=%f \n",b,a,c,lm[b][a][c]);
+  //     }
+  //   }
+  //   printf("      --------------------\n");
+  // }
   int p = 0;
   for (int a = 0; a < nen; a++)
   {

@@ -6,17 +6,22 @@
  */
 
 #include <stdio.h>
-#include "./linear_elastic_csm.hpp"
+#include "./fea_prog.hpp"
+#include "./1D_mesh_tools.hpp"
 using namespace std;
 
 // =====================================================================
 
-int main(int argc, char* argv[]) {
-   // Define material properties
+int main() {
+	// Define material properties
+	double E = 10000; // Pascals
+	double w = 2;			// meters
+	double t = 0.03; 	// meters
+	double props = {E, w, t};
 
-   // Create problem mesh
-
-   // Call FEA solver
+	// Create problem mesh
+	
+	// Call FEA solver
 }
 
 

@@ -5,6 +5,8 @@
  * \version 1.0
  */
 
+#pragma once
+#include <vector>
 using namespace std;
 
 // =====================================================================
@@ -17,9 +19,8 @@ public:
 	double dispBC[3]; // 3 degrees of freedom per node (axial, trans, rotational)
 	double forceBC[3]; // forcing in two directions plus moment about the third
 
-	void CreateNode();
-	void CreateNode(int id_, int type_, double coords_);
-	void DefineBCs(int BCtype, double BCval);
+	void CreateNode(int num, double* c);
+	void DefineBCs(int* BCtype, double* BCval);
 };
 
 // =====================================================================
@@ -30,19 +31,19 @@ public:
 	int nen;
 	vector<Node> adjNodes;
 
-	void CreateElem();
+	void CreateElem(int num, vector<Node> nodes);
 
-	void CreateElem(int id_, vector<Node> nodes);
-
-	void GetStiff(double E, double w, double t, double P, 
-				  vector< vector<double> >& KE,
-				  vector<double>& FE);
+	void GetStiff(double E, double w, double t, double P,
+                  vector< vector< vector<double> > > id,
+                  vector< vector< vector<double> > > lm, 
+                  vector< vector<double> >& KE,
+                  vector<double>& FE);
 
 	void assemble(vector< vector< vector<double> > > lm,
                   vector< vector<double> > KE,
                   vector<double> FE, vector<double>& G,
                   vector< vector<double> >& K,
-                  vector<double>& F)
+                  vector<double>& F);
 };
 
 // =====================================================================
@@ -54,6 +55,5 @@ public:
 	vector<Element> allElems;
 	vector<Node> allNodes;
 
-	void CreateMesh();
 	void CreateMesh(vector<Element> elems);
 };

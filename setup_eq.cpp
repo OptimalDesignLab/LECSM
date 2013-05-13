@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include <vector>
 #include "./setup_eq.hpp"
 using namespace std;
 
@@ -45,10 +46,11 @@ void setup_eq(Mesh nozzle, vector< vector<double> >FG,
   ndof = 0;
   ndog = 0;
   Node nd;
-  for (int b = 0; a < nnp; a++)
+  int nnp = nozzle.nnp;
+  for (int b = 0; b < nnp; b++)
   {
-    nd = mesh.allNodes[b];
-    a = nd.id;
+    nd = nozzle.allNodes[b];
+    int a = nd.id;
     for (int i = 0; i < 3; i++)
     {
       if (nd.type[i]==1)       // DoF - possible nodal load

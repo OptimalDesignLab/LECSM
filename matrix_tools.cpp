@@ -6,6 +6,8 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <vector>
 #include "./matrix_tools.hpp"
 using namespace std;
 

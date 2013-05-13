@@ -9,11 +9,13 @@
 #include "./fea_prog.hpp"
 #include "./1D_mesh_tools.hpp"
 #include "./setup_eq.hpp"
+#include "./matrix_tools.hpp"
+#include "./output_tools.hpp"
 using namespace std;
 
 // =====================================================================
 
-void FEA(Mesh nozzle, double props, double P,
+void FEA(Mesh nozzle, double* props, double* P,
          vector< vector<double> > FG)
 {
   // Core Finite Element Analaysis procedure.
@@ -33,13 +35,13 @@ void FEA(Mesh nozzle, double props, double P,
   int nel = nozzle.nel;
 
   // Initialize the problem equation.
-  printf("Setting up global equation mapping...\n")
-  vector< vector< vector<double> > > id(nsd, vector< vector<double> >(nnp, vector<double>(3)));
+  printf("Setting up global equation mapping...\n");
+  vector< vector< vector<double> > > id(3, vector< vector<double> >(nnp, vector<double>(2)));
   vector<double> G;
   vector<double> F;
   int ndof, ndog;
-  setup_eq(nozzle, FG, id, G, F, ndof, ndog)
-  printf("DONE\n")
+  setup_eq(nozzle, FG, id, G, F, ndof, ndog);
+  printf("DONE\n");
   printf("Allocating global stiffness matrix...\n");
   vector< vector<double> > K(ndof, vector<double>(ndof));
   for (int a = 0; a < ndof; a++)
@@ -64,11 +66,12 @@ void FEA(Mesh nozzle, double props, double P,
     int nen = elem.nen;
     int nee = nen*3;
     printf("Constructing the element stiffness matrix and force vector...\n");
-    vector< vector< vector<double> > > lm(nsd, vector< vector<double> >(nen, vector<double>(3)));
+    vector< vector< vector<double> > > lm(3, vector< vector<double> >(nen, vector<double>(2)));
     vector< vector<double> > KE(nee, vector<double>(nee));
     vector<double> FE(nee);
-    elem.GetStiff(E, w, t, P, id, lm, KE, FE);
-    printf("DONE\n")
+    double locP = P[i];
+    elem.GetStiff(E, w, t, locP, id, lm, KE, FE);
+    printf("DONE\n");
     
     // Assemble the element contributions into the global matrices.
     printf("Assembling the element contributions into global matrices...\n");
