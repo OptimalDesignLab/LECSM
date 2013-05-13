@@ -64,23 +64,38 @@ Mesh::CreateMesh() {
 Mesh::CreateMesh(vector<Element> elems) {
   allElems = elems;
   nel = allElems.size();
-  // count number of mesh nodes, assuming 1-D mesh
   nnp = 0;
-  Element elem;
-  for (int i=0; i<nel; i++) {
+  Element elem = allElems.at(0);
+  Node nodeL = elem.adjNodes[0];
+  Node nodeR = elem.adjNodes[1];
+  vector<Node> allNodes = {nodeL, nodeR};
+  for (int i=1; i<nel; i++) {
     elem = allElems.at(i);
-    nnp += elem.nen - 1;
+    allNodes.push_back(elem.adjNodes[1]);    
   }
-  nnp++;
+  nnp = allNodes.size();
 }
 
 // =====================================================================
 
-void Element::GetStiff(double E, double w, double t, double P, 
+void Element::GetStiff(double E, double w, double t, double P,
+                       vector< vector< vector<double> > > id,
+                       vector< vector< vector<double> > > lm, 
                        vector< vector<double> >& KE,
                        vector<double>& FE) {
-  nodeL = adjNodes[0];
-  nodeR = adjNodes[1];
+  // Recover the left and right nodes of the element
+  Node nodeL = adjNodes[0];
+  Node nodeR = adjNodes[1];
+  // Generate the local equation mapping
+  lm[0][0][0] = id[0][nodeL.id][0];
+  lm[0][0][1] = id[0][nodeL.id][1];
+  lm[0][1][0] = id[0][nodeR.id][0];
+  lm[0][1][1] = id[0][nodeR.id][1];
+  lm[1][0][0] = id[1][nodeL.id][0];
+  lm[1][0][1] = id[1][nodeL.id][1];
+  lm[1][1][0] = id[1][nodeR.id][0];
+  lm[1][1][1] = id[1][nodeR.id][1];
+  // Calculate the element stiffness matrix
   double x1 = nodeL.coords[0];
   double y1 = nodeL.coords[1];
   double x2 = nodeR.coords[0];
@@ -88,8 +103,7 @@ void Element::GetStiff(double E, double w, double t, double P,
   double len = sqrt(pow(x2-x1,2) + pow(y2-y1,2));
   double c = (x2 - x1)/len;
   double s = (y2 - y1)/len;
-  // Create the element stiffness matrix
-  double A = w*t;
+  double A = w*t;     // cross section area of the element
   double blk[2][2];
   blk[0][0] = E*A*pow(c,2)/len;
   blk[0][1] = E*A*c*s/len;

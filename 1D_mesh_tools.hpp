@@ -46,6 +46,7 @@ public:
 	int nnp;
 	int nel;
 	vector<Element> allElems;
+	vector<Node> allNodes;
 
 	CreateMesh();
 	CreateMesh(vector<Element> elems);

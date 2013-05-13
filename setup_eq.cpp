@@ -1,5 +1,5 @@
 /**
- * \file setup_eq.cc
+ * \file setup_eq.cpp
  * \determine the local to global equation mapping for FEA
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
@@ -11,8 +11,7 @@ using namespace std;
 
 // ======================================================================
 
-void setup_eq(int nnp, int nel, int nsd,
-             vector< vector<int> > ntyp, vector< vector<double> >FG,
+void setup_eq(Mesh nozzle, vector< vector<double> >FG,
              vector< vector< vector<double> > >& id,
              vector<double>& G, vector<double>& F,
              int& ndof,      int& ndog)
@@ -45,25 +44,28 @@ void setup_eq(int nnp, int nel, int nsd,
   // prescribed essential BCs.
   ndof = 0;
   ndog = 0;
-  for (int a = 0; a < nnp; a++)
+  Node nd;
+  for (int b = 0; a < nnp; a++)
   {
-    for (int i = 0; i < nsd; i++)
+    nd = mesh.allNodes[b];
+    a = nd.id;
+    for (int i = 0; i < 2; i++)
     {
-      if (ntyp[a][i]==1)       // DoF - possible nodal load
+      if (nd.type[i]==1)       // DoF - possible nodal load
       {
         id[i][a][0] = 1;        // store the node type
         id[i][a][1] = ndof;     // store the equation number
         ndof++;
-        F.push_back(FG[a][i]);     // store the nodal load
+        F.push_back(nd.forceBC[i]);     // store the nodal load
       }
       else                      // prescribed BC
       {
-        if (ntyp[a][i]==2)     // DoG - non-zero BC
+        if (nd.type[i]==2)     // DoG - non-zero BC
         {
           id[i][a][0] = 2;
           id[i][a][1] = ndog;
           ndog++;
-          G.push_back(FG[a][i]);   // store the essential BC
+          G.push_back(nd.dispBC[i]);   // store the essential BC
         }
         else                    // zero BC (nodeTyle[i] == 0)
         {

@@ -1,5 +1,5 @@
 /**
- * \file fea_prog.cc
+ * \file fea_prog.cpp
  * \FEA program driver function
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
@@ -11,13 +11,12 @@ using namespace std;
 
 // =====================================================================
 
-void FEA(pMeshMdl mesh, pGeomMdl geom, int nsd,
+void FEA(Mesh nozzle, double props, double P,
          vector< vector<double> > D,
          vector< vector<int> > ntyp,
          vector< vector<double> > FG,
          vector<double> f_init,
-         vector< vector<double> > hOn,
-         vector<double> h)
+         double P)
 {
   // Core Finite Element Analaysis procedure.
   //
@@ -29,21 +28,18 @@ void FEA(pMeshMdl mesh, pGeomMdl geom, int nsd,
   //                        component at the node
   //    FG                - vector of nodal point forces or nodal
   //                        prescribed essential boundary conditions
-  //    f_init            - distributed forces on the geometry
-  //
+  //    f_init            - body forces
+
   // Process the problem mesh.
-  int nnp, nel;
-  pPart part;
-  printf("Processing problem mesh...\n");
-  process_mesh(mesh, geom, nsd, part, nnp, nel);
-  printf("DONE\n");
+  int nnp = nozzle.nnp;
+  int nel = nozzle.nel;
 
   // Initialize the problem equation.
   vector< vector< vector<double> > > id(nsd, vector< vector<double> >(nnp, vector<double>(2)));
   vector<double> G;
   vector<double> F;
   int ndof, ndog;
-  setup_eq(nnp, nel, nsd, ntyp, FG, id, G, F, ndof, ndog);
+  setup_eq(nozzle, FG, id, G, F, ndof, ndog)
   printf("Allocating global stiffness matrix...\n");
   vector< vector<double> > K(ndof, vector<double>(ndof));
   for (int a = 0; a < ndof; a++)
@@ -54,51 +50,18 @@ void FEA(pMeshMdl mesh, pGeomMdl geom, int nsd,
   printf("DONE\n");
   printf("Governing equation initialized.\n");
 
-  // Initiate the global stress-displacement matrix.
-  vector< vector< vector< vector<double> > > > S;
-
   // Loop over all elements, assuming that each face is an element.
   printf("Starting element iteration...\n");
-  pPartEntIter iter;
-  FMDB_PartEntIter_Init(part, FMDB_FACE, FMDB_ALLTOPO, iter);
-  pMeshEnt elem;
-  int iterEnd = FMDB_PartEntIter_GetNext(iter, elem);
-  int elemID;
-  while (!iterEnd)
+  Element elem;
+  for (int i=0; i<nel; i++)
   {
-    // Get information about the element.
-    elemID = FMDB_Ent_ID(elem);
-    printf("Element Number: %i\n", elemID);
-    int nint, nen, nee;
-    Elem_CheckType(elem, nint, nen);
-    nee = nen*nsd;
-    printf("    Number of integration points: %i\n", nint);
-    printf("    Number of element nodes: %i\n", nen);
-    vector<int> ien(nen);
-    vector<double> weights(nint);
-    vector< vector<double> > intPts(nint, vector<double>(nsd));
-    vector< vector<double> > nodeCoords(nen, vector<double>(nsd));
-    Elem_GetInfo(elem, nsd, nen, nint, nee, ien, weights, intPts, nodeCoords);
-    printf("    Element node coordinates:\n");
-    for (int n = 0; n < nen; n++)
-      {printf("        %f    %f\n",nodeCoords[n][0],nodeCoords[n][1]);}
-
-    // Construct the element stiffness matrix and force vector.
-    printf("Constructing the element stiffness matrix and force vector...\n");
-    vector< vector< vector<double> > > lm(nsd, vector< vector<double> >(nen, vector<double>(2)));
+    // Get the element stiffness matrix.
+    elem = nozzle.allElems[i];
+    printf("Element Number: %i\n", elem.id);
+    int nee = nen*2;
     vector< vector<double> > KE(nee, vector<double>(nee));
     vector<double> FE(nee);
-    vector< vector< vector<double> > > Se(nint, vector< vector<double> >(3, vector<double>(nsd*nen)));
-    ele_stiff(elem, nsd, nint, nen, nee, D, f_init, hOn, h, 
-              intPts, weights, nodeCoords, ien, id, lm, KE, FE, Se);
-    // Clear out vectors
-    printf("DONE\n");
-    S.push_back(Se);
-    printf("    Element Stiffness Matrix (KE):\n");
-    printMatrix(KE, nee, nee);
-    printf("    Element Force Matrix (FE):\n");
-    for (int i = 0; i < FE.size(); i++)
-      {printf("    |  %d  |\n", FE[i]);}
+    elem.GetStiff(E, w, t, P, KE, FE);
 
     // Assemble the element contributions into the global matrices.
     printf("Assembling the element contributions into global matrices...\n");
