@@ -1,9 +1,29 @@
 Alp Dener, Spring 2013, C/C++
 _________________________________________________________________________________
-Linear Elastic Computational Structural Analysis Program
+LINEAR ELASTIC COMPUTATIONAL STRUCTURAL ANALYSIS (2D TRUSS)
 
-Developed for the Spring 2013 MANE6680 Finite Element Programming course taught
-by Prof. Mark Shephard at Rensselaer Polytechnic Institute. Capable of calculating 
-structural node displacements for 1-D or 2-D, structured or unstructured, linear 
-or quadratic meshes as a result of nodal, edge or body loading. Allows prescribing
-nodal displacements as boundary conditions.
+Originally written for the Spring 2013 MANE6680 Finite Element Programming course 
+taught by Prof. Mark Shephard at Rensselaer Polytechnic Institute. Current version
+is specialized to compute node displacements in a 2D truss mesh due to distributed
+pressures on the truss. Finite Element Mesh Database (FMDB) dependency has been
+removed and replaced with a purpose-built object-oriented 1D mesh library.
+
+This code is being developed to be later coupled with Prof. Jason Hicken's
+Quasi 1D Euler solver and used as part of the MDA for multidisciplinary optimization
+algorithms.
+_________________________________________________________________________________
+TO DO LIST:
+
++ Bspline::EvalAtPoints will give a vector of Y coordinates
+that correspond to a vector of X coordinates on the Bspline.
+Use this to create the mesh.
+
++ Use Bspline::FitCurve to generate analytical Bspline from
+a set of X and Y coordinates, which is then interrogated by
+the flow solver for areas at particular X coordinates.
+
++ Finish writing header files.
+
++ Fix compile errors.
+
++ Build a set of test cases. 
