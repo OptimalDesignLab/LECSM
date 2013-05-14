@@ -7,7 +7,7 @@
 
 #pragma once
 #include <vector>
-using namespace std;
+using namespace std; 
 
 void output_disp(int nnp, vector<double> G,
                  vector< vector< vector<double> > > id,

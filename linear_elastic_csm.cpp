@@ -12,7 +12,7 @@ using namespace std;
 
 // =====================================================================
 
-int main(int argc, char *argv[]) {
+int main() {
 	// Define material properties
 	double E = 10000; // Pascals
 	double w = 2;			// meters
@@ -57,4 +57,6 @@ int main(int argc, char *argv[]) {
 
 	// Call FEA solver
 	FEA(nozzle, props, P);
+
+	return 0;
 }

@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <vector>
 #include "./1D_mesh_tools.hpp"
 #include "./matrix_tools.hpp"
 using namespace std;
