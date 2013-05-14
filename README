@@ -16,14 +16,9 @@ DEPENDENCIES:
 + Quasi 1D Euler solver
 + Kona (indirect)
 _________________________________________________________________________________
-TO DO LIST (for Tuesday, May 14):
+DESIGN NOTES (due Friday, May 17):
 
-+ Write a short main program that establishes a test case and calls
-all necessary functions.
-_________________________________________________________________________________
-MDA COUPLING (for Friday, May 17):
-
-+ Bspline::EvalAtPoints will give a vector of Y coordinates
++ + Bspline::EvalAtPoints will give a vector of Y coordinates
 that correspond to a vector of X coordinates on the Bspline.
 Use this to create the mesh.
 
@@ -33,6 +28,15 @@ the flow solver for areas at particular X coordinates.
 
 + Write a pre-processing function that creates a vector of
 pressure values per element based on the Quasi 1D Euler solver's
-output
+node-based output
 
-+ Figure out the gradients. (NEEDS A LOT OF WORK)
++ Figure out the gradients. (dA/du and dS/dp)
+
++ Figure out matrix vector products.
+	- dS/du * u_csm
+	- dA/du * u_csm
+	- dS/dp * (dA/du * u_csm)
+
++ Covert vectors to InnerProdVector class for compatibility.
+
+
