@@ -15,8 +15,7 @@ using namespace std;
 
 // =====================================================================
 
-void FEA(Mesh nozzle, double* props, double* P,
-         vector< vector<double> > FG)
+void FEA(Mesh nozzle, double* props, double* P)
 {
   // Core Finite Element Analaysis procedure.
   //
@@ -40,7 +39,7 @@ void FEA(Mesh nozzle, double* props, double* P,
   vector<double> G;
   vector<double> F;
   int ndof, ndog;
-  setup_eq(nozzle, FG, id, G, F, ndof, ndog);
+  setup_eq(nozzle, id, G, F, ndof, ndog);
   printf("DONE\n");
   printf("Allocating global stiffness matrix...\n");
   vector< vector<double> > K(ndof, vector<double>(ndof));

@@ -12,7 +12,7 @@ using namespace std;
 
 // ======================================================================
 
-void setup_eq(Mesh nozzle, vector< vector<double> >FG,
+void setup_eq(Mesh nozzle,
              vector< vector< vector<double> > >& id,
              vector<double>& G, vector<double>& F,
              int& ndof,      int& ndog)

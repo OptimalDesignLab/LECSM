@@ -10,5 +10,4 @@
 #include "./1D_mesh_tools.hpp"
 using namespace std;
 
-void FEA(Mesh nozzle, double* props, double P,
-         vector< vector<double> > FG);
+void FEA(Mesh nozzle, double* props, double* P);

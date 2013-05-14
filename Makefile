@@ -4,7 +4,7 @@ SHELL = /bin/sh
 
 .SUFFIXES:
 .SUFFIXES: .cpp .o
-.PHONY: default clean all lecsm
+.PHONY: default all tags lecsm_2Dbeam clean
 
 # compiler
 CXX= gcc 
@@ -14,20 +14,22 @@ CPPFLAGS= -cpp
 
 # compiler options that may vary (user can change)
 CXXFLAGS= 
-BOOST_ROOT= /usr/local/boost_1_47_0
+#BOOST_ROOT= /usr/local/boost_1_47_0
 
 # linker options
 # NOTE: -L is for linking, -Wl,-rpath is for loading
-LDFLAGS= -lstdc++ -L$(BOOST_ROOT)/stage/lib -lboost_program_options
+#LDFLAGS= -lstdc++ -L$(BOOST_ROOT)/stage/lib -lboost_program_options
+LDFLAGS= -lstdc++
 
 # options that DO NOT vary
-ALL_CXXFLAGS= -I. $(CXXFLAGS) -I $(BOOST_ROOT)
+#ALL_CXXFLAGS= -I. $(CXXFLAGS) -I $(BOOST_ROOT)
+ALL_CXXFLAGS= -I. $(CXXFLAGS)
 
 # source, object, and executable file names
 HEADERS= $(wildcard *.hpp)
 SOURCES= $(wildcard *.cpp)
 OBJS= $(SOURCES:.cpp=.o)
-BINARIES= lecsm.bin
+BINARIES= lecsm_2Dbeam.bin
 
 # implicit rule
 %.o : %.cpp $(HEADERS) Makefile
@@ -38,7 +40,12 @@ default: all
 
 all: $(BINARIES)
 
-lecsm.bin: $(OBJS) linear_elastic_csm.o Makefile
+tags: $(HEADERS) $(SOURCES)
+	@echo "Creating TAGS file for emacs"
+	@find -maxdepth 2 -iname '*.hpp' -print0 -o \
+	-iname '*.cpp' -print0 | xargs -0 etags
+
+lecsm_2Dbeam.bin: $(OBJS) linear_elastic_csm.o Makefile
 	@echo "Compiling \""$@"\" from \""$(OBJS)"\""
 	@$(CXX) -o $@ linear_elastic_csm.o $(OBJS) $(LDFLAGS) 
 
