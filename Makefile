@@ -45,9 +45,9 @@ tags: $(HEADERS) $(SOURCES)
 	@find -maxdepth 2 -iname '*.hpp' -print0 -o \
 	-iname '*.cpp' -print0 | xargs -0 etags
 
-lecsm_2Dbeam.bin: $(OBJS) linear_elastic_csm.o Makefile
+lecsm_2Dbeam.bin: $(OBJS) Makefile
 	@echo "Compiling \""$@"\" from \""$(OBJS)"\""
-	@$(CXX) -o $@ linear_elastic_csm.o $(OBJS) $(LDFLAGS) 
+	@$(CXX) -o $@ $(OBJS) $(LDFLAGS) 
 
 clean:
 	@echo "deleting temporary, object, and binary files"

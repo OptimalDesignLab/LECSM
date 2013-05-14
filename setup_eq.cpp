@@ -76,18 +76,18 @@ void setup_eq(Mesh nozzle,
       }
     } // end loop over possible dof at node
   } // end loop over nodes
-  // printf("DONE\n");
-  // printf("    Testing id values:\n");
-  // for (int c = 0; c < 2; c++)
-  // {
-  //   for (int a = 0; a < nnp; a++)
-  //   { 
-  //     for (int b = 0; b < 3; b++)
-  //     { 
-  //       printf("      id[%i][%i][%i]=%f \n",b,a,c,id[b][a][c]);
-  //     }
-  //   }
-  //   printf("      --------------------\n");
-  // }
-  // printf("DONE\n");
+  printf("DONE\n");
+  printf("    Testing id values:\n");
+  for (int c = 0; c < 2; c++)
+  {
+    for (int a = 0; a < nnp; a++)
+    { 
+      for (int b = 0; b < 3; b++)
+      { 
+        printf("      id[%i][%i][%i]=%f \n",b,a,c,id[b][a][c]);
+      }
+    }
+    printf("      --------------------\n");
+  }
+  printf("DONE\n");
 }

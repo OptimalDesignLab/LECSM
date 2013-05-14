@@ -69,26 +69,39 @@ void Mesh::CreateMesh(vector<Element> elems) {
 // =====================================================================
 
 void Element::GetStiff(double E, double w, double t, double P,
-                       vector< vector< vector<double> > > id,
-                       vector< vector< vector<double> > > lm, 
+                       vector< vector< vector<double> > > gm,
+                       vector< vector< vector<double> > >& lm, 
                        vector< vector<double> >& KE,
                        vector<double>& FE) {
   // Recover the left and right nodes of the element
   Node nodeL = adjNodes[0];
   Node nodeR = adjNodes[1];
   // Generate the local equation mapping
-  lm[0][0][0] = id[0][nodeL.id][0];
-  lm[0][0][1] = id[0][nodeL.id][1];
-  lm[0][1][0] = id[0][nodeR.id][0];
-  lm[0][1][1] = id[0][nodeR.id][1];
-  lm[1][0][0] = id[1][nodeL.id][0];
-  lm[1][0][1] = id[1][nodeL.id][1];
-  lm[1][1][0] = id[1][nodeR.id][0];
-  lm[1][1][1] = id[1][nodeR.id][1];
-  lm[2][0][0] = id[1][nodeL.id][0];
-  lm[2][0][1] = id[1][nodeL.id][1];
-  lm[2][1][0] = id[1][nodeR.id][0];
-  lm[2][1][1] = id[1][nodeR.id][1];
+  lm[0][0][0] = gm[0][nodeL.id][0];
+  lm[0][0][1] = gm[0][nodeL.id][1];
+  lm[0][1][0] = gm[0][nodeR.id][0];
+  lm[0][1][1] = gm[0][nodeR.id][1];
+  lm[1][0][0] = gm[1][nodeL.id][0];
+  lm[1][0][1] = gm[1][nodeL.id][1];
+  lm[1][1][0] = gm[1][nodeR.id][0];
+  lm[1][1][1] = gm[1][nodeR.id][1];
+  lm[2][0][0] = gm[1][nodeL.id][0];
+  lm[2][0][1] = gm[1][nodeL.id][1];
+  lm[2][1][0] = gm[1][nodeR.id][0];
+  lm[2][1][1] = gm[1][nodeR.id][1];
+  printf("    Testing id values for Element %d:\n",id);
+  for (int c = 0; c < 2; c++)
+  {
+    for (int a = 0; a < nen; a++)
+    { 
+      for (int b = 0; b < 3; b++)
+      { 
+        printf("      lm[%i][%i][%i]=%f \n",b,a,c,lm[b][a][c]);
+      }
+    }
+    printf("      --------------------\n");
+  }
+  printf("    DONE\n");
   // Calculate the local element stiffness matrix
   double x1 = nodeL.coords[0];
   double y1 = nodeL.coords[1];
@@ -159,6 +172,8 @@ void Element::GetStiff(double E, double w, double t, double P,
   vector< vector<double> > KT(6, vector<double>(6));
   matrixMult(KEloc, 6, 6, T, 6, 6, KT);
   matrixMult(Tt, 6, 6, KT, 6, 6, KE);
+  printf("    Element stiffness Matrix:\n");
+  printMatrix(KE,6,6);
   // Create the element forcing vector due to pressure
   // Add in the nodal force contributions
   double f_hat = -P*len*w/2;
@@ -170,6 +185,10 @@ void Element::GetStiff(double E, double w, double t, double P,
   FE[3] = fx + nodeR.forceBC[0];
   FE[4] = fy + nodeR.forceBC[1];
   FE[5] = nodeR.forceBC[2];
+  printf("    Element force vector:\n");
+  for (int i=0; i<6; i++) {
+    printf("      |  %f  |\n", FE[i]);
+  }
   // Clean-up
   T.clear();
   Tt.clear();

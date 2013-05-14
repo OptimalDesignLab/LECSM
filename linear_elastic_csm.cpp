@@ -14,16 +14,16 @@ using namespace std;
 
 int main() {
 	// Define material properties
-	double E = 10000; // Pascals
-	double w = 2;			// meters
-	double t = 0.03; 	// meters
+	double E = 10000000; 		// Pascals (Rubber)
+	double w = 2;						// meters
+	double t = 0.03; 				// meters
 	double props[3] = {E, w, t};
 
 	// Create problem mesh
 	Node node;
 	vector<Node> nodes;
-	double x[6] = {0.0, 0.6, 1.2, 1.8, 2.4, 3.0};
-	double y[6] = {0.0, 0.25, 0.5, 0.5, 0.25, 0.0};
+	double x[6] = {0.0, 0.5, 1.2, 1.8, 2.5, 3.0};
+	double y[6] = {0.0, 0.35, 0.5, 0.5, 0.35, 0.0};
 	for (int i=0; i<6; i++) {
 		double c[2] = {x[i],y[i]};
 		node.CreateNode(i, c);

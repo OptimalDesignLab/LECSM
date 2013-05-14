@@ -35,11 +35,11 @@ void FEA(Mesh nozzle, double* props, double* P)
 
   // Initialize the problem equation.
   printf("Setting up global equation mapping...\n");
-  vector< vector< vector<double> > > id(3, vector< vector<double> >(nnp, vector<double>(2)));
+  vector< vector< vector<double> > > gm(3, vector< vector<double> >(nnp, vector<double>(2)));
   vector<double> G;
   vector<double> F;
   int ndof, ndog;
-  setup_eq(nozzle, id, G, F, ndof, ndog);
+  setup_eq(nozzle, gm, G, F, ndof, ndog);
   printf("DONE\n");
   printf("Allocating global stiffness matrix...\n");
   vector< vector<double> > K(ndof, vector<double>(ndof));
@@ -69,7 +69,7 @@ void FEA(Mesh nozzle, double* props, double* P)
     vector< vector<double> > KE(nee, vector<double>(nee));
     vector<double> FE(nee);
     double locP = P[i];
-    elem.GetStiff(E, w, t, locP, id, lm, KE, FE);
+    elem.GetStiff(E, w, t, locP, gm, lm, KE, FE);
     printf("DONE\n");
     
     // Assemble the element contributions into the global matrices.
@@ -104,7 +104,7 @@ void FEA(Mesh nozzle, double* props, double* P)
   // Print out the node displacements.
   vector< vector<double> > nodeDisp(nnp, vector<double>(2));
   printf("Outputting displacements...\n");
-  output_disp(nnp, G, id, disp, nodeDisp);
+  output_disp(nnp, G, gm, disp, nodeDisp);
 
   printf("SUCCESS: Finite Element Analysis complete!\n");
 }
