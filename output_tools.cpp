@@ -6,7 +6,8 @@
  */
 
 #include <stdio.h>
-#include "./output_tools.h"
+#include <vector>
+#include "./output_tools.hpp"
 using namespace std;
 
 // ======================================================================
