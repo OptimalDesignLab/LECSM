@@ -8,6 +8,7 @@
 #pragma once
 #include <vector>
 #include "./1D_mesh_tools.hpp"
+#include "../quasi_1d_euler/inner_prod_vector.hpp"
 using namespace std;
 
 // =====================================================================
@@ -16,6 +17,8 @@ class LECSM {
 public:
 	double E, w, t;			// Material properties
 	Mesh geometry;		  // Problem geometry and BCs
+
+	void CalcStiffProd(InnerProdVector& u_csm, InnerProdVector& v_csm);
 
 	void Solve();
 };

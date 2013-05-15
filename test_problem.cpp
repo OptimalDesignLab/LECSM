@@ -6,6 +6,7 @@
  */
 
 #include <stdio.h>
+#include "../quasi_1d_euler/inner_prod_vector.hpp"
 #include "./lecsm.hpp"
 #include "./1D_mesh_tools.hpp"
 using namespace std;

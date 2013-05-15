@@ -33,7 +33,7 @@ public:
 
 	void CreateElem(int num, vector<Node> nodes);
 
-	void GetStiff(double E, double w, double t, double P,
+	void GetElemStiff(double E, double w, double t, double P,
                 vector< vector< vector<int> > >& gm,
                 vector< vector< vector<int> > >& lm,
                 vector< vector<double> >& KE,

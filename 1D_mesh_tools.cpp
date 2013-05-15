@@ -48,7 +48,7 @@ void Element::CreateElem(int num, vector<Node> nodes) {
   adjNodes = nodes;
 }
 
-void Element::GetStiff(double E, double w, double t, double P,
+void Element::GetElemStiff(double E, double w, double t, double P,
                        vector< vector< vector<int> > >& gm,
                        vector< vector< vector<int> > >& lm,
                        vector< vector<double> >& KE,
