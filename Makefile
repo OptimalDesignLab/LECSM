@@ -4,7 +4,7 @@ SHELL = /bin/sh
 
 .SUFFIXES:
 .SUFFIXES: .cpp .o
-.PHONY: default all tags lecsm_2Dbeam clean
+.PHONY: default all tags test_prob clean
 
 # compiler
 CXX= gcc 
@@ -29,7 +29,7 @@ ALL_CXXFLAGS= -I. $(CXXFLAGS)
 HEADERS= $(wildcard *.hpp)
 SOURCES= $(wildcard *.cpp)
 OBJS= $(SOURCES:.cpp=.o)
-BINARIES= lecsm_2Dbeam.bin
+BINARIES= test_prob.bin
 
 # implicit rule
 %.o : %.cpp $(HEADERS) Makefile
@@ -45,7 +45,7 @@ tags: $(HEADERS) $(SOURCES)
 	@find -maxdepth 2 -iname '*.hpp' -print0 -o \
 	-iname '*.cpp' -print0 | xargs -0 etags
 
-lecsm_2Dbeam.bin: $(OBJS) Makefile
+test_prob.bin: $(OBJS) Makefile
 	@echo "Compiling \""$@"\" from \""$(OBJS)"\""
 	@$(CXX) -o $@ $(OBJS) $(LDFLAGS) 
 

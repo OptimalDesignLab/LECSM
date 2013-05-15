@@ -27,33 +27,34 @@ public:
 
 class Element {
 public:
-	int id;
-	int nen;
+	int id, nen;
+	double pressure;
 	vector<Node> adjNodes;
 
 	void CreateElem(int num, vector<Node> nodes);
 
 	void GetStiff(double E, double w, double t, double P,
-                  vector< vector< vector<double> > > gm,
-                  vector< vector< vector<double> > >& lm, 
-                  vector< vector<double> >& KE,
-                  vector<double>& FE);
+                vector< vector< vector<int> > >& gm,
+                vector< vector< vector<int> > >& lm,
+                vector< vector<double> >& KE,
+                vector<double>& FE);
 
-	void assemble(vector< vector< vector<double> > > lm,
-                  vector< vector<double> > KE,
-                  vector<double> FE, vector<double>& G,
-                  vector< vector<double> >& K,
-                  vector<double>& F);
+	void Assemble(vector< vector<double> >& KE, vector<double>& FE,
+								vector< vector< vector<int> > >& lm,
+								vector<double>& G, vector<double>& F,
+                vector< vector<double> >& K);
 };
 
 // =====================================================================
 
 class Mesh {
 public:
-	int nnp;
-	int nel;
+	int nnp, nel, ndof, ndog;
 	vector<Element> allElems;
 	vector<Node> allNodes;
 
-	void CreateMesh(vector<Element> elems);
+	void CreateMesh(vector<Element>& elems);
+
+	void SetupEq(vector<double>& G, vector<double>& F,
+							 vector< vector< vector<int> > >& gm);
 };

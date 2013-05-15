@@ -6,16 +6,15 @@
  */
 
 #include <stdio.h>
-#include "./fea_prog.hpp"
+#include "./lecsm.hpp"
 #include "./1D_mesh_tools.hpp"
-#include "./setup_eq.hpp"
 #include "./matrix_tools.hpp"
 #include "./output_tools.hpp"
 using namespace std;
 
 // =====================================================================
 
-void FEA(Mesh nozzle, double* props, double* P)
+void LECSM::Solve()
 {
   // Core Finite Element Analaysis procedure.
   //
@@ -29,58 +28,52 @@ void FEA(Mesh nozzle, double* props, double* P)
   //                        prescribed essential boundary conditions
   //    f_init            - body forces
 
-  // Process the problem mesh.
-  int nnp = nozzle.nnp;
-  int nel = nozzle.nel;
-
-  // Initialize the problem equation.
+  // Initialize the problem equation
   printf("Setting up global equation mapping...\n");
-  vector< vector< vector<double> > > gm(3, vector< vector<double> >(nnp, vector<double>(2)));
+  int nnp = geometry.nnp;
+  vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
   vector<double> G;
   vector<double> F;
-  int ndof, ndog;
-  setup_eq(nozzle, gm, G, F, ndof, ndog);
+  geometry.SetupEq(G, F, gm);
   printf("DONE\n");
-  printf("Allocating global stiffness matrix...\n");
+
+  // Zero out the global stiffness matrix
+  int ndof = geometry.ndof;
+  int ndog = geometry.ndog;
   vector< vector<double> > K(ndof, vector<double>(ndof));
   for (int a = 0; a < ndof; a++)
   {
     for (int b = 0; b < ndof; b++)
-      {K[a][b]=0;} // Zero out the global stiffness matrix
+      {K[a][b]=0;}
   }
-  printf("DONE\n");
-
-  // Recover material/geometric properties
-  double E = props[0];
-  double w = props[1];
-  double t = props[2];
 
   // Loop over all elements, assuming that each face is an element.
   printf("Starting element iteration...\n");
   Element elem;
+  int nel = geometry.nel;
   for (int i=0; i<nel; i++)
   {
     // Get information about the element.
-    elem = nozzle.allElems[i];
-    int nen = elem.nen;
-    int nee = nen*3;
+    elem = geometry.allElems[i];
     printf("Constructing the element stiffness matrix and force vector...\n");
-    vector< vector< vector<double> > > lm(3, vector< vector<double> >(nen, vector<double>(2)));
-    vector< vector<double> > KE(nee, vector<double>(nee));
-    vector<double> FE(nee);
-    double locP = P[i];
+    int nen = elem.nen;
+    vector< vector<double> > KE(nen*3, vector<double>(nen*3));
+    vector<double> FE(nen*3);
+    vector< vector< vector<int> > > lm(3, vector< vector<int> >(nen, vector<int>(2)));
+    double locP = elem.pressure;
     elem.GetStiff(E, w, t, locP, gm, lm, KE, FE);
     printf("DONE\n");
     
     // Assemble the element contributions into the global matrices.
     printf("Assembling the element contributions into global matrices...\n");
-    elem.assemble(lm, KE, FE, G, K, F);
+    elem.Assemble(KE, FE, lm, G, F, K);
     printf("DONE\n");
 
-    // Clear vectors
-    lm.clear();
+    // Clean-up
     KE.clear();
     FE.clear();
+    lm.clear();
+
   }// finish looping over elements
   printf("Element iteration complete!\n");
 

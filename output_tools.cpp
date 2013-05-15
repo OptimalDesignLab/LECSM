@@ -11,9 +11,9 @@ using namespace std;
 
 // ======================================================================
 
-void output_disp(int nnp, vector<double> G,
-                 vector< vector< vector<double> > > id,
-                 vector<double> disp, vector< vector<double> >& nodeDisp)
+void output_disp(int nnp, vector<double>& G,
+                 vector< vector< vector<int> > >& gm,
+                 vector<double>& disp, vector< vector<double> >& nodeDisp)
 {
   // This procedure prints the displacements at nodes.
   //
@@ -35,8 +35,8 @@ void output_disp(int nnp, vector<double> G,
   {
     for (int i = 0; i < 3; i++)
     {
-      int t = id[i][A][0];
-      double P = id[i][A][1];
+      int t = gm[i][A][0];
+      double P = gm[i][A][1];
       if (t == 1)             // dof
         {nd[i] = disp[P];}
       else

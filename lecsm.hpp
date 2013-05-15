@@ -10,4 +10,12 @@
 #include "./1D_mesh_tools.hpp"
 using namespace std;
 
-void FEA(Mesh nozzle, double* props, double* P);
+// =====================================================================
+
+class LECSM {
+public:
+	double E, w, t;			// Material properties
+	Mesh geometry;		  // Problem geometry and BCs
+
+	void Solve();
+};

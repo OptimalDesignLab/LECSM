@@ -6,18 +6,21 @@
  */
 
 #include <stdio.h>
-#include "./fea_prog.hpp"
+#include "./lecsm.hpp"
 #include "./1D_mesh_tools.hpp"
 using namespace std;
 
 // =====================================================================
 
 int main() {
+
+	// Declare the solver
+	LECSM csm;
+
 	// Define material properties
-	double E = 10000000; 		// Pascals (Rubber)
-	double w = 2;						// meters
-	double t = 0.03; 				// meters
-	double props[3] = {E, w, t};
+	csm.E = 10000000;		// Young's Modulus (Rubber) (Pa)
+	csm.w = 2;					// Width of the geometry (meters)
+	csm.t = 0.03;				// Thickness of the beam elements (meters)
 
 	// Create problem mesh
 	Node node;
@@ -45,18 +48,17 @@ int main() {
 		elemNodes[0] = nodeL;
 		elemNodes[1] = nodeR;
 		elem.CreateElem(j, elemNodes);
+		elem.pressure = 20;
 		elems.push_back(elem);
 	}
 	Mesh nozzle;
 	nozzle.CreateMesh(elems);
 	nodes.clear();
 	elems.clear();
-
-	// Create sample pressure vector
-	double P[5] = {20,20,20,20,20}; // Pascals
+	csm.geometry = nozzle;
 
 	// Call FEA solver
-	FEA(nozzle, props, P);
+	csm.Solve();
 
 	return 0;
 }

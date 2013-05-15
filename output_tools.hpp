@@ -9,6 +9,6 @@
 #include <vector>
 using namespace std; 
 
-void output_disp(int nnp, vector<double> G,
-                 vector< vector< vector<double> > > id,
-                 vector<double> disp, vector< vector<double> >& nodeDisp);
+void output_disp(int nnp, vector<double>& G,
+                 vector< vector< vector<int> > >& gm,
+                 vector<double>& disp, vector< vector<double> >& nodeDisp);
