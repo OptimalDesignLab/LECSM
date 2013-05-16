@@ -28,16 +28,15 @@ public:
 class Element {
 public:
 	int id, nen;
-	double pressure;
+	double length, cosine, sine;
 	vector<Node> adjNodes;
 
 	void CreateElem(int num, vector<Node> nodes);
 
-	void GetElemStiff(double E, double w, double t, double P,
-                vector< vector< vector<int> > >& gm,
-                vector< vector< vector<int> > >& lm,
-                vector< vector<double> >& KE,
-                vector<double>& FE);
+	void GetElemStiff(double E, double w, double t, vector<double>& P,
+                	  vector< vector< vector<int> > >& gm,
+                	  vector< vector< vector<int> > >& lm,
+                	  vector< vector<double> >& KE, vector<double>& FE);
 
 	void Assemble(vector< vector<double> >& KE, vector<double>& FE,
 								vector< vector< vector<int> > >& lm,
@@ -55,6 +54,5 @@ public:
 
 	void CreateMesh(vector<Element>& elems);
 
-	void SetupEq(vector<double>& G, vector<double>& F,
-							 vector< vector< vector<int> > >& gm);
+	void SetupEq(vector< vector< vector<int> > >& gm);
 };

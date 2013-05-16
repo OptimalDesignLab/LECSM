@@ -46,17 +46,27 @@ void Element::CreateElem(int num, vector<Node> nodes) {
   id = num;
   nen = nodes.size();
   adjNodes = nodes;
+  Node nodeL = adjNodes[0];
+  Node nodeR = adjNodes[1];
+  double x1 = nodeL.coords[0];
+  double x2 = nodeR.coords[0];
+  double y1 = nodeL.coords[1];
+  double y2 = nodeR.coords[1];
+  length = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+  cosine = (x2 - x1)/length;
+  sine = (y2 - y1)/length;
 }
 
-void Element::GetElemStiff(double E, double w, double t, double P,
-                       vector< vector< vector<int> > >& gm,
-                       vector< vector< vector<int> > >& lm,
-                       vector< vector<double> >& KE,
-                       vector<double>& FE) {
+void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
+                           vector< vector< vector<int> > >& gm,
+                           vector< vector< vector<int> > >& lm,
+                           vector< vector<double> >& KE, vector<double>& FE) {
 
   // Recover the left and right nodes of the element
   Node nodeL = adjNodes[0];
   Node nodeR = adjNodes[1];
+  int idL = nodeL.id;
+  int idR = nodeR.id;
 
   // Generate the local equation mapping
   lm[0][0][1] = gm[0][nodeL.id][1];
@@ -66,58 +76,51 @@ void Element::GetElemStiff(double E, double w, double t, double P,
   lm[1][0][1] = gm[1][nodeL.id][1];
   lm[1][1][0] = gm[1][nodeR.id][0];
   lm[1][1][1] = gm[1][nodeR.id][1];
-  lm[2][0][0] = gm[1][nodeL.id][0];
-  lm[2][0][1] = gm[1][nodeL.id][1];
-  lm[2][1][0] = gm[1][nodeR.id][0];
-  lm[2][1][1] = gm[1][nodeR.id][1];
+  lm[2][0][0] = gm[2][nodeL.id][0];
+  lm[2][0][1] = gm[2][nodeL.id][1];
+  lm[2][1][0] = gm[2][nodeR.id][0];
+  lm[2][1][1] = gm[2][nodeR.id][1];
 
   // Calculate the local element stiffness matrix
-  double x1 = nodeL.coords[0];
-  double y1 = nodeL.coords[1];
-  double x2 = nodeR.coords[0];
-  double y2 = nodeR.coords[1];
-  double len = sqrt(pow(x2-x1,2) + pow(y2-y1,2));
-  double c = (x2 - x1)/len;
-  double s = (y2 - y1)/len;
   double A = w*t; // cross section area of the element
   double I = w*pow(t,3)/12; // area moment of inertia of the beam element x-section
   vector< vector<double> > KEloc(nen*3, vector<double>(nen*3));
-  KEloc[0][0] = A*E/len;
+  KEloc[0][0] = A*E/length;
   KEloc[0][1] = 0;
   KEloc[0][2] = 0;
-  KEloc[0][3] = -A*E/len;
+  KEloc[0][3] = -A*E/length;
   KEloc[0][4] = 0;
   KEloc[0][5] = 0;
   KEloc[1][0] = 0;
-  KEloc[1][1] = 12*E*I/pow(len,3);
-  KEloc[1][2] = 6*E*I/pow(len,2);
+  KEloc[1][1] = 12*E*I/pow(length,3);
+  KEloc[1][2] = 6*E*I/pow(length,2);
   KEloc[1][3] = 0;
-  KEloc[1][4] = -12*E*I/pow(len,3);
-  KEloc[1][5] = 6*E*I/pow(len,2);
+  KEloc[1][4] = -12*E*I/pow(length,3);
+  KEloc[1][5] = 6*E*I/pow(length,2);
   KEloc[2][0] = 0;
-  KEloc[2][1] = 6*E*I/pow(len,2);
-  KEloc[2][2] = 4*E*I/len;
+  KEloc[2][1] = 6*E*I/pow(length,2);
+  KEloc[2][2] = 4*E*I/length;
   KEloc[2][3] = 0;
-  KEloc[2][4] = -6*E*I/pow(len,2);
-  KEloc[2][5] = 2*E*I/len;
-  KEloc[3][0] = -A*E/len;
+  KEloc[2][4] = -6*E*I/pow(length,2);
+  KEloc[2][5] = 2*E*I/length;
+  KEloc[3][0] = -A*E/length;
   KEloc[3][1] = 0;
   KEloc[3][2] = 0;
-  KEloc[3][3] = A*E/len;
+  KEloc[3][3] = A*E/length;
   KEloc[3][4] = 0;
   KEloc[3][5] = 0;
   KEloc[4][0] = 0;
-  KEloc[4][1] = -12*E*I/pow(len,3);
-  KEloc[4][2] = -6*E*I/pow(len,2);
+  KEloc[4][1] = -12*E*I/pow(length,3);
+  KEloc[4][2] = -6*E*I/pow(length,2);
   KEloc[4][3] = 0;
-  KEloc[4][4] = 12*E*I/pow(len,3);
-  KEloc[4][5] = -6*E*I/pow(len,2);
+  KEloc[4][4] = 12*E*I/pow(length,3);
+  KEloc[4][5] = -6*E*I/pow(length,2);
   KEloc[5][0] = 0;
-  KEloc[5][1] = 6*E*I/pow(len,2);
-  KEloc[5][2] = 2*E*I/len;
+  KEloc[5][1] = 6*E*I/pow(length,2);
+  KEloc[5][2] = 2*E*I/length;
   KEloc[5][3] = 0;
-  KEloc[5][4] = -6*E*I/pow(len,2);
-  KEloc[5][5] = 4*E*I/len;
+  KEloc[5][4] = -6*E*I/pow(length,2);
+  KEloc[5][5] = 4*E*I/length;
 
   // Create the local to global transformation matrix
   vector< vector<double> > T(nen*3, vector<double>(nen*3));
@@ -126,41 +129,38 @@ void Element::GetElemStiff(double E, double w, double t, double P,
       T[i][j] = 0;
     }
   }
-  T[0][0] = c;
-  T[0][1] = s;
-  T[1][0] = -s;
-  T[1][1] = c;
+  T[0][0] = cosine;
+  T[0][1] = sine;
+  T[1][0] = -sine;
+  T[1][1] = cosine;
   T[2][2] = 1;
-  T[3][3] = c;
-  T[3][4] = s;
-  T[4][3] = -s;
-  T[4][4] = c;
+  T[3][3] = cosine;
+  T[3][4] = sine;
+  T[4][3] = -sine;
+  T[4][4] = cosine;
   T[5][5] = 1;
 
   // Calculate the global element stiffness matrix
   vector< vector<double> > Tt(nen*3, vector<double>(nen*3));
   matrixTranspose(T, nen*3, nen*3, Tt);
   vector< vector<double> > KT(nen*3, vector<double>(nen*3));
-  matrixMult(KEloc, nen*3, nen*3, T, nen*3, nen*3, KT);
+  matrixMult(KEloc, nen*3, nen*3, T, nen*3, nen*3, KT);  
   matrixMult(Tt, nen*3, nen*3, KT, nen*3, nen*3, KE);
-  printf("    Element stiffness Matrix:\n");
-  printMatrix(KE, nen*3, nen*3);
 
   // Create the element forcing vector due to pressure
   // Add in the nodal force contributions
-  double f_hat = -P*len*w/2;
-  double fy = f_hat*c;
-  double fx = f_hat*s;
+  double p1 = P[idL];
+  double p2 = P[idR];
+  double Pave = 0.5*(p1+p2);
+  double f_hat = -Pave*length*w/2;
+  double fy = f_hat*cosine;
+  double fx = f_hat*sine;
   FE[0] = fx + nodeL.forceBC[0];
   FE[1] = fy + nodeL.forceBC[1];
   FE[2] = nodeL.forceBC[2];
   FE[3] = fx + nodeR.forceBC[0];
   FE[4] = fy + nodeR.forceBC[1];
   FE[5] = nodeR.forceBC[2];
-  printf("    Element force vector:\n");
-  for (int i=0; i<6; i++) {
-    printf("      |  %f  |\n", FE[i]);
-  }
 
   // Clean-up
   T.clear();
@@ -168,7 +168,7 @@ void Element::GetElemStiff(double E, double w, double t, double P,
   KEloc.clear();
 }
 
-void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE, 
+void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE,
                        vector< vector< vector<int> > >& lm,
                        vector<double>& G, vector<double>& F,
                        vector< vector<double> >& K)
@@ -247,8 +247,7 @@ void Mesh::CreateMesh(vector<Element>& elems) {
   nnp = allNodes.size();
 }
 
-void Mesh::SetupEq(vector<double>& G, vector<double>& F,
-                   vector< vector< vector<int> > >& gm)
+void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
 {
   // This procedure is responsible for specifying the
   // equation numbers at each of the possible nodal
@@ -290,7 +289,6 @@ void Mesh::SetupEq(vector<double>& G, vector<double>& F,
         gm[i][a][0] = 1;        // store the node type
         gm[i][a][1] = ndof;     // store the equation number
         ndof++;
-        F.push_back(nd.forceBC[i]);     // store the nodal load
       }
       else                      // prescribed BC
       {
@@ -299,7 +297,6 @@ void Mesh::SetupEq(vector<double>& G, vector<double>& F,
           gm[i][a][0] = 2;
           gm[i][a][1] = ndog;
           ndog++;
-          G.push_back(nd.dispBC[i]);   // store the essential BC
         }
         else                    // zero BC (node.type[i] == 0)
         {

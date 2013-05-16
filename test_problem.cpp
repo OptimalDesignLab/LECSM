@@ -19,7 +19,7 @@ int main() {
 	LECSM csm;
 
 	// Define material properties
-	csm.E = 10000000;		// Young's Modulus (Rubber) (Pa)
+	csm.E = 100000000;		// Young's Modulus (Rubber) (Pa)
 	csm.w = 2;					// Width of the geometry (meters)
 	csm.t = 0.03;				// Thickness of the beam elements (meters)
 
@@ -31,9 +31,15 @@ int main() {
 	for (int i=0; i<6; i++) {
 		double c[2] = {x[i],y[i]};
 		node.CreateNode(i, c);
+		csm.P.push_back(20); 	// define nodal pressures
 		if ((i==0)||(i==5)) {
-			int BCtype[3] = {0,0,NULL};
-			double BCval[3] = {0,0,NULL};
+			int BCtype[3] = {0,0,1};
+			double BCval[3] = {0,0,0};
+			node.DefineBCs(BCtype, BCval);
+		}
+		else {
+			int BCtype[3] = {0,1,1};
+			double BCval[3] = {0,0,0};
 			node.DefineBCs(BCtype, BCval);
 		}
 		nodes.push_back(node);
@@ -49,7 +55,6 @@ int main() {
 		elemNodes[0] = nodeL;
 		elemNodes[1] = nodeR;
 		elem.CreateElem(j, elemNodes);
-		elem.pressure = 20;
 		elems.push_back(elem);
 	}
 	Mesh nozzle;

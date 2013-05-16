@@ -16,13 +16,22 @@ using namespace std;
 class LECSM {
 public:
 	double E, w, t;			// Material properties
+	double h;						// Distance to axis of symmetry
+	vector<double> P;		// Nodal pressures
 	Mesh geometry;		  // Problem geometry and BCs
-	vector< vector<double> > K; // Global LHS stiffness matrix
-	vector<double> F, G; // Global RHS and prescribed BC vector
 
-	void GetStiff();
+	void InitGlobalVecs(vector<double>& G, vector<double>& F,
+											vector< vector<double> >& K);
 
-	void CalcStiffProd(InnerProdVector& u_csm, InnerProdVector& v_csm);
+	void GetStiff(vector< vector< vector<int> > >& gm,
+								vector<double>& G, vector<double>& F,
+                vector< vector<double> >& K);
+
+	void Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm);
+
+	void Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk);
+
+	void Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd);
 
 	void Solve();
 };
