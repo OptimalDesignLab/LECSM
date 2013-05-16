@@ -1,4 +1,4 @@
-Alp Dener, Spring 2013, C/C++
+Alp Dener, Spring/Summer 2013, C/C++
 _________________________________________________________________________________
 LINEAR ELASTIC COMPUTATIONAL STRUCTURAL ANALYSIS (2D BEAM)
 
@@ -7,36 +7,23 @@ taught by Prof. Mark Shephard at Rensselaer Polytechnic Institute. Current versi
 is specialized to compute node displacements in a mesh of 2D beam elements due to 
 distributed pressures on the structure.
 
-This code is being developed for future coupling with Prof. Jason Hicken's
+This code is being developed for coupling with Prof. Jason Hicken's
 Quasi 1D Euler solver as part of the MDA for multidisciplinary optimization 
-algorithms.
+algorithms. Repository for the coupling project can be found here:
+https://bitbucket.org/denera/aero_struct_mda
 _________________________________________________________________________________
 DEPENDENCIES:
 + Boost
 + Quasi 1D Euler solver
-+ Kona (indirect)
++ Kona (indirect) (https://bitbucket.org/jehicken/kona)
 _________________________________________________________________________________
-DESIGN NOTES (due Friday, May 17):
+DESIGN NOTES:
 
 + + Bspline::EvalAtPoints will give a vector of Y coordinates
 that correspond to a vector of X coordinates on the Bspline.
 Use this to create the mesh.
 
 + Use Bspline::FitCurve to generate analytical Bspline from
-a set of X and Y coordinates, which is then interrogated by
-the flow solver for areas at particular X coordinates.
-
-+ Write a pre-processing function that creates a vector of
-pressure values per element based on the Quasi 1D Euler solver's
-node-based output
-
-+ Figure out the gradients. (dA/du and dS/dp)
-
-+ Figure out matrix vector products.
-	- dS/du * u_csm
-	- dA/du * u_csm
-	- dS/dp * (dA/du * u_csm)
-
-+ Covert vectors to InnerProdVector class for compatibility.
-
+a set of X and Y coordinates. The optimizer will control only
+the Bspline, not the mesh coordinates.
 
