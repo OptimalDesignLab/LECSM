@@ -17,6 +17,10 @@ class LECSM {
 public:
 	double E, w, t;			// Material properties
 	Mesh geometry;		  // Problem geometry and BCs
+	vector< vector<double> > K; // Global LHS stiffness matrix
+	vector<double> F, G; // Global RHS and prescribed BC vector
+
+	void GetStiff();
 
 	void CalcStiffProd(InnerProdVector& u_csm, InnerProdVector& v_csm);
 
