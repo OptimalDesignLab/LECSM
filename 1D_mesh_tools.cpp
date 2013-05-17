@@ -23,6 +23,8 @@ void Node::CreateNode(int num, double* c) {
   }             
 }
 
+// =====================================================================
+
 void Node::DefineBCs(int* BCtype, double* BCval) {
   for (int i=0; i<3; i++) {    // loop over the three dimensions of BCs
     if (BCtype[i] == 0) {      // displacement BC
@@ -57,6 +59,8 @@ void Element::CreateElem(int num, vector<Node> nodes) {
   sine = (y2 - y1)/length;
 }
 
+// =====================================================================
+
 void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
                            vector< vector< vector<int> > >& gm,
                            vector< vector< vector<int> > >& lm,
@@ -69,17 +73,18 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
   int idR = nodeR.id;
 
   // Generate the local equation mapping
-  lm[0][0][1] = gm[0][nodeL.id][1];
-  lm[0][1][0] = gm[0][nodeR.id][0];
-  lm[0][1][1] = gm[0][nodeR.id][1];
-  lm[1][0][0] = gm[1][nodeL.id][0];
-  lm[1][0][1] = gm[1][nodeL.id][1];
-  lm[1][1][0] = gm[1][nodeR.id][0];
-  lm[1][1][1] = gm[1][nodeR.id][1];
-  lm[2][0][0] = gm[2][nodeL.id][0];
-  lm[2][0][1] = gm[2][nodeL.id][1];
-  lm[2][1][0] = gm[2][nodeR.id][0];
-  lm[2][1][1] = gm[2][nodeR.id][1];
+  lm[0][0][0] = gm[0][idL][0];
+  lm[0][0][1] = gm[0][idL][1];
+  lm[0][1][0] = gm[0][idR][0];
+  lm[0][1][1] = gm[0][idR][1];
+  lm[1][0][0] = gm[1][idL][0];
+  lm[1][0][1] = gm[1][idL][1];
+  lm[1][1][0] = gm[1][idR][0];
+  lm[1][1][1] = gm[1][idR][1];
+  lm[2][0][0] = gm[2][idL][0];
+  lm[2][0][1] = gm[2][idL][1];
+  lm[2][1][0] = gm[2][idR][0];
+  lm[2][1][1] = gm[2][idR][1];
 
   // Calculate the local element stiffness matrix
   double A = w*t; // cross section area of the element
@@ -149,8 +154,8 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
 
   // Create the element forcing vector due to pressure
   // Add in the nodal force contributions
-  double p1 = P[idL];
-  double p2 = P[idR];
+  double p1 = P[0];
+  double p2 = P[1];
   double Pave = 0.5*(p1+p2);
   double f_hat = -Pave*length*w/2;
   double fy = f_hat*cosine;
@@ -167,6 +172,8 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
   Tt.clear();
   KEloc.clear();
 }
+
+// =====================================================================
 
 void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE,
                        vector< vector< vector<int> > >& lm,
@@ -247,34 +254,10 @@ void Mesh::CreateMesh(vector<Element>& elems) {
   nnp = allNodes.size();
 }
 
+// =====================================================================
+
 void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
 {
-  // This procedure is responsible for specifying the
-  // equation numbers at each of the possible nodal
-  // degrees of freedom and identifying the essential
-  // boundary conditions.
-  //
-  // Inputs:
-  //    nnp           - number of mesh nodes
-  //    nel           - number of mesh elements
-  //    nsd           - number of space dimensions
-  //    ntyp          - vector indicating the type of DoF for each
-  //                    component at the node
-  //    FG            - vector of nodal point forces or nodal
-  //                    prescribed essential boundary conditions
-  // Outputs:
-  //    id            - destination matrix which, for each node,
-  //                    stores the type of DoG and the equation number
-  //    K(ndof,ndof)  - global stiffness matrix
-  //    F(ndof)       - global force vector
-  //    G(ndog)       - global prescribed displacement vector
-  //    ndof          - number of DoF without BCs
-  //    ndog          - number of DoF with non-zero essential BCs
-  //
-
-  // Loop over the nodes setting the equation or prescribed
-  // essential BC number and load the global nodal loads or
-  // prescribed essential BCs.
   ndof = 0;
   ndog = 0;
   Node nd;
@@ -305,5 +288,18 @@ void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
         }
       }
     }
+  }
+}
+
+// =====================================================================
+
+void Mesh::Update(const InnerProdVector& u_csm)
+{
+  // Loop over mesh nodes and update their coordinates
+  Node node;
+  for (int i=0; i<nnp; i++) {
+    node = allNodes[i];
+    node.coords[0] += u_csm(3*i);
+    node.coords[1] += u_csm(3*i+1);
   }
 }
