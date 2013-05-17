@@ -1,6 +1,6 @@
 /**
  * \file fea_prog.hpp
- * \FEA program header file
+ * \brief FEA program header file
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */
@@ -13,6 +13,10 @@ using namespace std;
 
 // =====================================================================
 
+/*!
+ * \class LECSM
+ * \brief 2D linear elastic computational structural analysis solver
+ */
 class LECSM {
 public:
 

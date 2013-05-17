@@ -1,6 +1,6 @@
 /**
  * \file matrix_tools.cpp
- * \a set of matrix operation tools
+ * \brief a set of matrix operation tools
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */
@@ -12,13 +12,10 @@ using namespace std;
 
 // ======================================================================
 
-void matrixMult(vector< vector<double> > A, int rowA, int colA,
-                vector< vector<double> > B, int rowB, int colB,
+void matrixMult(vector< vector<double> >& A, int rowA, int colA,
+                vector< vector<double> >& B, int rowB, int colB,
                 vector< vector<double> >& AB)
 {
-  // Performs a matrix multiplication for the given matrices
-  // A and B.
-  //
   // Sanity check on matrix dimensions.
   if (colA != rowB)
   {
@@ -47,13 +44,10 @@ void matrixMult(vector< vector<double> > A, int rowA, int colA,
 
 // ======================================================================
 
-void matrixVecMult(vector< vector<double> > A, int rowA, int colA,
-                   vector<double> B, int rowB,
+void matrixVecMult(vector< vector<double> >& A, int rowA, int colA,
+                   vector<double>& B, int rowB,
                    vector<double>& AB)
 {
-  // Performs a matrix-vector multiplication for the given matrix
-  // A and given vector B.
-
   // Sanity check on matrix dimensions.
   if (colA != rowB)
   {
@@ -76,7 +70,7 @@ void matrixVecMult(vector< vector<double> > A, int rowA, int colA,
 
 // ======================================================================
 
-void matrixTranspose(vector< vector<double> > A, int rowA, int colA,
+void matrixTranspose(vector< vector<double> >& A, int rowA, int colA,
                      vector< vector<double> >& Atrans)
 {
   for (int i = 0; i < rowA; i++)
@@ -90,7 +84,7 @@ void matrixTranspose(vector< vector<double> > A, int rowA, int colA,
 
 // ======================================================================
 
-void printMatrix(vector< vector<double> > A, int rowA, int colA)
+void printMatrix(vector< vector<double> >& A, int rowA, int colA)
 {
   for (int r = 0; r < rowA; r++)
   {
@@ -107,21 +101,9 @@ void printMatrix(vector< vector<double> > A, int rowA, int colA)
 
 // ======================================================================
 
-void CGSolve(vector< vector<double> > K, int rowK, int colK,
-             vector<double> F, int rowF, int maxIt, vector<double>& Disp)
-{
-  // Iterative Conjugate Gradient solver for an Ax=b system.
-  //
-  // Inputs:
-  //    K         - left hand side matrix
-  //    rowK      - vertical size of A
-  //    colK      - horizontal size of A
-  //    F         - right hand side vector
-  //    rowF      - vertical size of b
-  //    maxIt     - number of maximum iterations
-  // Outputs:
-  //    Disp      - approximate solution vector
-  
+void CGSolve(vector< vector<double> >& K, int rowK, int colK,
+             vector<double>& F, int rowF, int maxIt, vector<double>& Disp)
+{  
   // Sanity check for system dimensions
   if (colK != rowF)
   {

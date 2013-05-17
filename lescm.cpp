@@ -1,6 +1,6 @@
 /**
  * \file fea_prog.cpp
- * \FEA program driver function
+ * \brief FEA program driver function
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */

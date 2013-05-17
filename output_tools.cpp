@@ -1,6 +1,6 @@
 /**
  * \file output_tools.cpp
- * \a set of tools to output FEA analysis results
+ * \brief a set of tools to output FEA analysis results
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */
@@ -15,17 +15,6 @@ void output_disp(int nnp, vector<double>& G,
                  vector< vector< vector<int> > >& gm,
                  vector<double>& disp, vector< vector<double> >& nodeDisp)
 {
-  // This procedure prints the displacements at nodes.
-  //
-  // Inputs:
-  //    nnp               - number of mesh nodes
-  //    nsd               - number of space dimensions
-  //    G                 - global prescribed displacement vector
-  //    id                - destination matrix which, for each node,
-  //                        stores the type of DoG and the equation number
-  //    disp              - global displacement vector
-  // Outputs:
-  //    nodeDisp          - nodal displacement vector
   printf("Directions:\n");
   printf("  0 - x-axis\n");
   printf("  1 - y-axis\n");

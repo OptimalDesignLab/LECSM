@@ -1,6 +1,6 @@
 /**
  * \file 1D_mesh_tools.cpp
- * \a 1D mesh library
+ * \brief 1D mesh library
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */
@@ -180,34 +180,6 @@ void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE,
                        vector<double>& G, vector<double>& F,
                        vector< vector<double> >& K)
 {
-  // This procedure assemples the element contributions into
-  // the global matrices.
-  //
-  // Inputs:
-  //    nsd             - number of space dimensions
-  //    nen             - number of element nodes
-  //    lm              - element location vector, identifying the
-  //                      equation numbers and the location of
-  //                      essential BCs for the element
-  //    KE              - element stiffness matrix
-  //    FE              - element force vector
-  //    G               - global prescribed displacement vector
-  // Outputs:
-  //    K               - global stiffness matrix
-  //    F               - global force matrix
-
-  // printf("    Testing lm values:\n");
-  // for (int c = 0;c<2;c++)
-  // {
-  //   for (int a = 0;a<nen;a++)
-  //   { 
-  //     for (int b = 0;b<3;b++)
-  //     { 
-  //       printf("      lm[%i][%i][%i]=%f \n",b,a,c,lm[b][a][c]);
-  //     }
-  //   }
-  //   printf("      --------------------\n");
-  // }
   int p = 0;
   for (int a = 0; a < nen; a++)
   {

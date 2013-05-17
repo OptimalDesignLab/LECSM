@@ -1,6 +1,6 @@
 /**
  * \file linear_elastic_csm.cpp
- * \CSM program executable
+ * \brief CSM program executable
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */
