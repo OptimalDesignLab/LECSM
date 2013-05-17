@@ -1,6 +1,6 @@
 /**
- * \file fea_prog.cpp
- * \brief FEA program driver function
+ * \file lecsm.cpp
+ * \brief Linear Elastic CSM Solver (2D beam)
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */
@@ -51,7 +51,7 @@ void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
 
 // =====================================================================
 
-void LECSM::SetBoundarConds(const InnerProdVector & BCtype, 
+void LECSM::SetBoundaryConds(const InnerProdVector & BCtype, 
                             const InnerProdVector & BCval)
 {
   // Loop over all mesh nodes
@@ -126,7 +126,7 @@ void LECSM::GetStiff(vector< vector< vector<int> > >& gm,
     vector<double> locP(2);
     locP[0] = P_(nodeL.id);
     locP[1] = P_(nodeR.id);
-    elem.GetElemStiff(E, w, t, locP, gm, lm, KE, FE);
+    elem.GetElemStiff(E_, w_, t_, locP, gm, lm, KE, FE);
     
     // Assemble the element contributions into the global matrices.
     elem.Assemble(KE, FE, lm, G, F, K);
@@ -204,7 +204,7 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
   vector< vector<double> > dAdu(nnp, vector<double>(nnp*3));
   for (int i=0; i<nnp; i++) {
     dAdu[i][i*p] = 0;
-    dAdu[i][i*p+1] = -w;
+    dAdu[i][i*p+1] = -w_;
     dAdu[i][i*p+2] = 0;
     wrk(i) = 0;     // initialize the output vector
   }
@@ -294,8 +294,8 @@ void LECSM::CalcStateVars()
   for (int i=0; i<nnp; i++) {
     xCoords(i) = u_(3*i);
     y = u_(3*i+1);
-    h = 2*(0.5 - y);
-    area(i) = w*h;
+    realH = 2*(0.5*h_ - y);
+    area(i) = w_*realH;
   }
 }
 

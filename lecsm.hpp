@@ -1,6 +1,6 @@
 /**
- * \file fea_prog.hpp
- * \brief FEA program header file
+ * \file lecsm.hpp
+ * \brief LECSM solver header file
  * \author  Alp Dener <alp.dener@gmail.com>
  * \version 1.0
  */
@@ -26,15 +26,13 @@ public:
    * \param[in] x - vector of x coordinates
    * \param[in] y - vector of y coordinates
    */
-	LECSM(int nnp, const InnerProdVector & x, const InnerProdVector & y) :
+	LECSM(int nnp) :
 			area_(nnp, 0.0),
 			xCoords(nnp, 0.0),
 			res_(nnp, 0.0),
 			u_(3*nnp, 0.0),
-			P_(nnp, 0.0) {
-		nnp_ nnp;
-		GenerateMesh(x, y);
-	}
+			P_(nnp, 0.0) 
+   { nnp_ nnp; }
 
 	/*!
    * \brief default destructor
@@ -63,8 +61,11 @@ public:
    * \brief sets the material properties for the CSM solver
    * \param[in] E - young's modulus
    * \param[in] t - 2D beam thickness
+   * \param[in] w - nozzle fixed width
+   * \param[in] h - nozzle max height (at y_coord = 0)
    */
-	void set_material(double E, double t) { E_ = E; t_ = t; }
+	void set_material(double E, double t, double w, double h) { 
+      E_ = E; t_ = t; w_ = w; h_ = h;}
 
 	/*!
    * \brief sets the displacement vector for the CSM solver
