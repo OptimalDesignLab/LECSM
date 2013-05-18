@@ -17,8 +17,9 @@ using namespace std;
 
 void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
 {
-  // Save x coordinates for later
+  // Save coordinates for later
   xCoords_ = x;
+  yCoords_ = y;
 
   // Create the mesh nodes
   Node node;
@@ -280,7 +281,7 @@ void LECSM::CalcStateVars()
   double y, realH;
   for (int i=0; i<nnp; i++) {
     xCoords_(i) += u_(3*i);
-    y = u_(3*i+1);
+    y = yCoords(i) - u_(3*i+1);
     realH = 2*(0.5*h_ - y);
     area_(i) = w_*realH;
   }
