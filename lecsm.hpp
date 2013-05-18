@@ -28,7 +28,7 @@ public:
    */
 	LECSM(int nnp) :
 			area_(nnp, 0.0),
-			xCoords(nnp, 0.0),
+			xCoords_(nnp, 0.0),
 			res_(nnp, 0.0),
 			u_(3*nnp, 0.0),
 			P_(nnp, 0.0) 
