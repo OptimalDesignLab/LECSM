@@ -55,9 +55,9 @@ int main() {
   BCtype(0) = 0;
   BCtype(1) = 0;
   BCtype(2) = -1;
-  BCtype(3*num_nodes_-3) = 0;
-  BCtype(3*num_nodes_-2) = 0;
-  BCtype(3*num_nodes_-1) = -1;
+  BCtype(3*nnp-3) = 0;
+  BCtype(3*nnp-2) = 0;
+  BCtype(3*nnp-1) = -1;
   csm.SetBoundaryConds(BCtype, BCval);
 
 	// Call FEA solver
