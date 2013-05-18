@@ -60,6 +60,10 @@ int main() {
   BCtype(3*nnp-1) = -1;
   csm.SetBoundaryConds(BCtype, BCval);
 
+  // Specify pressure
+  InnerProdVector press(nnp, 20.0);
+  csm.set_press(press);
+
 	// Call FEA solver
 	csm.Solve();
 
