@@ -52,8 +52,8 @@ void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
 
 // =====================================================================
 
-void LECSM::SetBoundaryConds(const InnerProdVector & BCtype, 
-                            const InnerProdVector & BCval)
+void LECSM::SetBoundaryConds(InnerProdVector & BCtype, 
+                             InnerProdVector & BCval)
 {
   // Loop over all mesh nodes
   Node node;
@@ -200,22 +200,9 @@ void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
 
 void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
 {
-  // Calculate dA/du
   int nnp = geom_.nnp;
-  int p = 0;
-  vector< vector<double> > dAdu(nnp, vector<double>(nnp*3));
   for (int i=0; i<nnp; i++) {
-    dAdu[i][i*p] = 0;
-    dAdu[i][i*p+1] = -w_;
-    dAdu[i][i*p+2] = 0;
-    wrk(i) = 0;     // initialize the output vector
-  }
-
-  // Calculate wrk = (dA/du)*u_csm
-  for (int i=0; i<nnp; i++) {
-    for (int j=0; j<nnp*3; j++) {
-      wrk(i) += dAdu[i][j] * u_csm(j);
-    }
+    wrk(i) = -w_ * u_csm(3*i+1);
   }
 }
 
@@ -239,7 +226,6 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
   Node nodeL, nodeR;
   int idL, idR;
   double len, c, s, dFxdp, dFydp;
-  vector< vector<double> > dSdu_ele(6, vector<double>(2));
   for (int i=0; i<nel; i++) {
     // Initialize element parameters
     elem = geom_.allElems[i];
@@ -271,15 +257,11 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
     // dSdu[3*idR+2][idL] = 0 // Moment term (pressure independent)
   }
 
-  // Initialize the output vector
-  for (int i=0; i<nnp*3; i++) {
-    u_cfd(i) = 0;
-  }
-
   // Calculate (dS/du)*wrk
   for (int i=0; i<nnp*3; i++) {
+    u_cfd(i) = 0; // initialize the row
     for (int j=0; j<nnp; j++) {
-      u_cfd(i) += dSdu[i][j] * wrk(j);
+      u_cfd(i) += dSdu[i][j] * wrk(j); // perform the multiplication
     }
   }
 

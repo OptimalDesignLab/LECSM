@@ -90,7 +90,7 @@ public:
    * \param[in] BCtype - type of BC (displacement or forcing)
    * \param[in] BYval - value of BC
    */
-	void SetBoundaryConds(const InnerProdVector & BCtype, const InnerProdVector & BCval);
+	void SetBoundaryConds(InnerProdVector & BCtype, InnerProdVector & BCval);
 
 	/*!
    * \brief updates mesh node coordinates
