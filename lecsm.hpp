@@ -29,6 +29,7 @@ public:
 	LECSM(int nnp) :
 			area_(nnp, 0.0),
 			xCoords_(nnp, 0.0),
+         yCoords_(nnp, 0.0),
 			res_(3*nnp, 0.0),
 			u_(3*nnp, 0.0),
 			P_(nnp, 0.0) { nnp_ = nnp; }
@@ -157,6 +158,7 @@ public:
 private:
 	InnerProdVector area_;
 	InnerProdVector xCoords_;
+   InnerProdVector yCoords_;
 	InnerProdVector res_;
 	InnerProdVector u_;
 	InnerProdVector P_;
