@@ -281,7 +281,7 @@ void LECSM::CalcStateVars()
   double y, realH;
   for (int i=0; i<nnp; i++) {
     xCoords_(i) += u_(3*i);
-    y = yCoords(i) - u_(3*i+1);
+    y = yCoords_(i) - u_(3*i+1);
     realH = 2*(0.5*h_ - y);
     area_(i) = w_*realH;
   }
