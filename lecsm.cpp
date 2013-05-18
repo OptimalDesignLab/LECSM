@@ -311,7 +311,7 @@ void LECSM::CalcResidual()
   vector<double> u_dof(ndof);
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3; j++) {
-      if (gm[j][i][0] != 1) {
+      if (gm[j][i][0] == 1) {
         p = gm[j][i][1];
         u_dof[p] = u_(3*i+j);
       }
