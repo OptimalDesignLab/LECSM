@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 6;
+	int nnp = 5;
 	LECSM csm(nnp);
 
 	// Define material properties
@@ -33,11 +33,9 @@ int main() {
   InnerProdVector area(nnp, 0.0);
   for (int i = 0; i < nnp; i++) {
     // evenly spaced nodes along the x
-    x_coord(i) = i*length / nnp-1;
+    x_coord(i) = i*length/(nnp-1);
     // parabolic nozzle wall for y coords
     y_coord(i) = 0.01*(length-x_coord(i))*x_coord(i);
-    // area based on a 1-by-1 square intake cross-section
-    area(i) = 2*(1-y_coord(i)); 
   }
   csm.GenerateMesh(x_coord, y_coord);
 

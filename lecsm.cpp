@@ -22,32 +22,28 @@ void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
   yCoords_ = y;
 
   // Create the mesh nodes
-  Node node;
   vector<Node> nodes;
   for (int i=0; i<nnp_; i++) {
     double c[2] = {x(i), y(i)};
-    node.CreateNode(i,c);
+    Node node(i, c);
     nodes.push_back(node);
   }
 
   // Create 2D beam elements from the nodess
-  Element elem;
-  vector<Element> elems;
-  Node nodeL;
-  Node nodeR;
-  vector<Node> elemNodes(2);
   int nel = nnp_ - 1;
+  vector<Element> elems(nel);
+  vector<Node> elemNodes(2);
   for (int i=0; i<nel; i++) {
-    nodeL = nodes[i];
-    nodeR = nodes[i+1];
+    Node nodeL = nodes[i];
+    Node nodeR = nodes[i+1];
     elemNodes[0] = nodeL;
     elemNodes[1] = nodeR;
-    elem.CreateElem(i, elemNodes);
-    elems.push_back(elem);
+    Element elem(i, elemNodes);
+    elems[i] = (elem);
   }
 
   // Create the problem mesh
-  geom_.CreateMesh(elems);
+  geom_.CreateMesh(elems, nodes);
 
   // Clean-up
   nodes.clear();
@@ -60,17 +56,15 @@ void LECSM::SetBoundaryConds(const InnerProdVector & BCtype,
                              const InnerProdVector & BCval)
 {
   // Loop over all mesh nodes
-  Node node;
   int type[3];
   double val[3];
-  for (int i=0; i<nnp_; i++) {
-    node = geom_.allNodes[i];
+  for (int i=0; i<nnp_; i++) {;
     for (int j=0; j<3; j++) {
       type[j] = BCtype(3*i+j);  // extract BC type for the node
       val[j] = BCval(3*i+j);  // extract BC value for the node
     }
     // define the BC
-    node.DefineBCs(type, val);
+    geom_.allNodes[i].DefineBCs(type, val);
   }
 }
 
@@ -350,6 +344,10 @@ void LECSM::CalcResidual()
 
 void LECSM::Solve()
 {
+#if 1
+  geom_.InspectNodes();
+#endif
+
   // Generate the global equation number mapping
   int nnp = geom_.nnp;
   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));

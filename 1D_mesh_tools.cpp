@@ -13,16 +13,6 @@ using namespace std;
 
 // =====================================================================
 
-void Node::CreateNode(int num, double* c) {
-  id = num;
-  for (int i=0; i<3; i++) {
-    coords[i] = c[i];
-    type[i] = 1;            // node is initially free
-  }             
-}
-
-// =====================================================================
-
 void Node::DefineBCs(int* BCtype, double* BCval) {
   for (int i=0; i<3; i++) {    // loop over the three dimensions of BCs
     if (BCtype[i] == 0) {      // displacement BC
@@ -42,7 +32,7 @@ void Node::DefineBCs(int* BCtype, double* BCval) {
 
 // =====================================================================
 
-void Element::CreateElem(int num, vector<Node> nodes) {
+Element::Element(int num, vector<Node> nodes) {
   id = num;
   nen = nodes.size();
   adjNodes = nodes;
@@ -208,20 +198,21 @@ void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE,
 
 // =====================================================================
 
-void Mesh::CreateMesh(vector<Element>& elems) {
-  allElems = elems;
-  nel = allElems.size();
-  nnp = 0;
-  Element elem = allElems.at(0);
-  Node nodeL = elem.adjNodes[0];
-  Node nodeR = elem.adjNodes[1];
-  allNodes.push_back(nodeL);
-  allNodes.push_back(nodeR);
-  for (int i=1; i<nel; i++) {
-    elem = allElems.at(i);
-    allNodes.push_back(elem.adjNodes[1]);    
+void Mesh::InspectNodes()
+{
+  printf("NODE COORDINATES:\n");
+  printf("==============================================\n");
+  printf("\n");
+  printf("    ID    ::    x    ::    y    ::    type    \n");
+  printf("----------------------------------------------\n");
+  for (int i=0; i<nnp; i++) {
+    Node node = allNodes[i];
+    double* c = node.coords;
+    int* type = node.type;
+    printf("    %i    ::    %f    ::    %f    :: {%i, %i, %i} \n", 
+      node.id, c[0], c[1], type[0], type[1], type[2]);
   }
-  nnp = allNodes.size();
+  printf("\n");
 }
 
 // =====================================================================
@@ -230,33 +221,26 @@ void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
 {
   ndof = 0;
   ndog = 0;
-  Node nd;
   for (int b = 0; b < nnp; b++)
   {
-    nd = allNodes[b];
-    int a = nd.id;
+    Node node = allNodes[b];
+    int a = node.id;
+    int* type = node.type;
     for (int i = 0; i < 3; i++)
     {
-      if (nd.type[i]==1)        // DoF - possible nodal load
+      gm[i][a][0] = type[i];
+      if (type[i] == 1)        // DoF - possible nodal load
       {
-        gm[i][a][0] = 1;        // store the node type
         gm[i][a][1] = ndof;     // store the equation number
         ndof++;
       }
-      else                      // prescribed BC
+      else if (type[i] == 2)   // DoG - non-zero BC
       {
-        if (nd.type[i]==2)      // DoG - non-zero BC
-        {
-          gm[i][a][0] = 2;
-          gm[i][a][1] = ndog;
-          ndog++;
-        }
-        else                    // zero BC (node.type[i] == 0)
-        {
-          gm[i][a][0] = 0;
-          gm[i][a][1] = 0;
-        }
+        gm[i][a][1] = ndog;
+        ndog++;
       }
+      else                      // zero BC (node.type[i] == 0)
+        gm[i][a][1] = 0;
     }
   }
 }
@@ -266,9 +250,8 @@ void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
 void Mesh::Update(const InnerProdVector& u_csm)
 {
   // Loop over mesh nodes and update their coordinates
-  Node node;
   for (int i=0; i<nnp; i++) {
-    node = allNodes[i];
+    Node node = allNodes[i];
     node.coords[0] += u_csm(3*i);
     node.coords[1] += u_csm(3*i+1);
   }

@@ -29,7 +29,7 @@ public:
 	LECSM(int nnp) :
 			area_(nnp, 0.0),
 			xCoords_(nnp, 0.0),
-         yCoords_(nnp, 0.0),
+      yCoords_(nnp, 0.0),
 			res_(3*nnp, 0.0),
 			u_(3*nnp, 0.0),
 			P_(nnp, 0.0) { nnp_ = nnp; }
@@ -144,6 +144,13 @@ public:
    */
 	void CalcResidual();
 
+  /*!
+   * \brief inspects the solver mesh
+   */
+  void InspectMesh() {
+    geom_.InspectNodes();
+  }
+
 	/*!
    * \brief independent solution of a CSM problem using conjugate gradient
    */
@@ -152,7 +159,7 @@ public:
 private:
 	InnerProdVector area_;
 	InnerProdVector xCoords_;
-   InnerProdVector yCoords_;
+  InnerProdVector yCoords_;
 	InnerProdVector res_;
 	InnerProdVector u_;
 	InnerProdVector P_;

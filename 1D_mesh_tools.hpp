@@ -24,12 +24,23 @@ public:
 	double dispBC[3]; // 3 degrees of freedom per node (axial, trans, rotational)
 	double forceBC[3]; // forcing in two directions plus moment about the third
 
+  Node() {}
+
 	/*!
    * \brief construct the node
    * \param[in] num - global node id
    * \param[in] c - vector of node coordinates
    */
-	void CreateNode(int num, double* c);
+  Node(int num, double* c)
+  {
+    id = num;
+    for (int i=0; i<3; i++) {
+      coords[i] = c[i];
+      type[i] = 1;            // node is initially free
+    }   
+  }
+
+  ~Node() {}
 
 	/*!
    * \brief define nodal boundary conditions
@@ -51,12 +62,16 @@ public:
 	double length, cosine, sine;
 	vector<Node> adjNodes;
 
+  Element() {}
+
 	/*!
    * \brief construct the element
    * \param[in] num - global element id
    * \param[in] nodes - vector of nodes defining the element
    */
-	void CreateElem(int num, vector<Node> nodes);
+	Element(int num, vector<Node> nodes);
+
+  ~Element() {}
 
 	/*!
    * \brief construct the element stiffness matrix and forcing vector
@@ -101,11 +116,32 @@ public:
 	vector<Element> allElems;
 	vector<Node> allNodes;
 
+  /*!
+   * \brief class constructor
+   */
+  Mesh() {
+    nnp = 0;
+    nel = 0;
+  }
+
 	/*!
    * \brief construct the mesh
    * \param[in] elems - vector of mesh elements
    */
-	void CreateMesh(vector<Element>& elems);
+	void CreateMesh(vector<Element>& elems, vector<Node>& nodes)
+  {
+    allElems = elems;
+    allNodes = nodes;
+    nel = allElems.size();
+    nnp = allNodes.size();
+  }
+
+  /*!
+   * \brief default destructor
+   */
+  ~Mesh() {} //
+
+  void InspectNodes();
 
 	/*!
    * \brief generate the global equation number map
