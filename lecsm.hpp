@@ -94,12 +94,6 @@ public:
 	void SetBoundaryConds(const InnerProdVector & BCtype, const InnerProdVector & BCval);
 
 	/*!
-   * \brief updates mesh node coordinates
-   * \param[in] u_csm - total displacement vector (3*nnp)
-   */
-	void UpdateMesh(const InnerProdVector & u_csm) { geom_.Update(u_csm); }
-
-	/*!
    * \brief initializes the global vectors used in the solver
    * \param[out] G - global prescribed displacements vector
    * \param[out] F - global prescribed nodal forcing

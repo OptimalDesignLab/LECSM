@@ -16,55 +16,60 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	LECSM csm;
+	int nnp = 10;
+	LECSM csm(nnp);
 
 	// Define material properties
-	csm.E = 100000000;		// Young's Modulus (Rubber) (Pa)
-	csm.w = 2;					// Width of the geometry (meters)
-	csm.t = 0.03;				// Thickness of the beam elements (meters)
+	double E = 100000000;		// Young's Modulus (Rubber) (Pa)
+	double t = 0.03;				// Thickness of the beam elements (meters)
+	double w = 1;					  // Width of the domain (meters)
+	double h = 1;						// Height of the domain (meters)
+	csm.set_material(E, t, w, h);
 
 	// Create problem mesh
-	Node node;
-	vector<Node> nodes;
-	double x[6] = {0.0, 0.5, 1.2, 1.8, 2.5, 3.0};
-	double y[6] = {0.0, 0.35, 0.5, 0.5, 0.35, 0.0};
-	for (int i=0; i<6; i++) {
-		double c[2] = {x[i],y[i]};
-		node.CreateNode(i, c);
-		csm.P.push_back(20); 	// define nodal pressures
-		if ((i==0)||(i==5)) {
-			int BCtype[3] = {0,0,1};
-			double BCval[3] = {0,0,0};
-			node.DefineBCs(BCtype, BCval);
-		}
-		else {
-			int BCtype[3] = {0,1,1};
-			double BCval[3] = {0,0,0};
-			node.DefineBCs(BCtype, BCval);
-		}
-		nodes.push_back(node);
-	}
-	Element elem;
-	vector<Element> elems;
-	Node nodeL;
-	Node nodeR;
-	vector<Node> elemNodes(2);
-	for (int j=0; j<5; j++) {
-		nodeL = nodes[j];
-		nodeR = nodes[j+1];
-		elemNodes[0] = nodeL;
-		elemNodes[1] = nodeR;
-		elem.CreateElem(j, elemNodes);
-		elems.push_back(elem);
-	}
-	Mesh nozzle;
-	nozzle.CreateMesh(elems);
-	nodes.clear();
-	elems.clear();
-	csm.geometry = nozzle;
+	double length = 10.0;
+  InnerProdVector x_coord(nnp, 0.0);
+  InnerProdVector y_coord(nnp, 0.0);
+  InnerProdVector area(nnp, 0.0);
+  for (int i = 0; i < nnp; i++) {
+    // evenly spaced nodes along the x
+    x_coord(i) = i*length / nnp-1;
+    // parabolic nozzle wall for y coords
+    y_coord(i) = 0.01*(length-x_coord(i))*x_coord(i);
+    // area based on a 1-by-1 square intake cross-section
+    area(i) = 2*(1-y_coord(i)); 
+  }
+  csm.GenerateMesh(x_coord, y_coord);
+
+  // determine the nodal structural boundary conditions
+  InnerProdVector BCtype(3*nnp, 0.0);
+  InnerProdVector BCval(3*nnp, 0.0);
+  for (int i=0; i<nnp; i++) {
+    BCtype(3*i) = 0;
+    BCtype(3*i+1) = -1;
+    BCtype(3*i+2) = -1;
+    BCval(3*i) = 0;
+    BCval(3*i+1) = 0;
+    BCval(3*i+2) = 0;
+  }
+  BCtype(0) = 0;
+  BCtype(1) = 0;
+  BCtype(2) = -1;
+  BCtype(3*num_nodes_-3) = 0;
+  BCtype(3*num_nodes_-2) = 0;
+  BCtype(3*num_nodes_-1) = -1;
+  csm.SetBoundaryConds(BCtype, BCval);
 
 	// Call FEA solver
 	csm.Solve();
+
+	csm.CalcResidual();
+	InnerProdVector & res = csm.get_res();
+
+	printf("Printing residual for inspection:\n");
+	for(int i=0; i<3*nnp; i++) {
+		printf("|  %f  |\n", res(i));
+	}
 
 	return 0;
 }

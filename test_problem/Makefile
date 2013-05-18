@@ -1,38 +1,43 @@
-# makefile for linear_elastic_csm
+# makefile for Kona library
 
 SHELL = /bin/sh
 
 .SUFFIXES:
 .SUFFIXES: .cpp .o
-.PHONY: default all tags test_prob clean
+.PHONY: default call tags test_problem clean
 
 # compiler
 CXX= gcc 
 
 # c preprocessor options
-CPPFLAGS= -cpp
+CPPFLAGS= -cpp -DDEBUG -DBOOST_UBLAS_ENABLE_PROXY_SHORTCUTS
+#CPPFLAGS= -cpp -DNDEBUG -DBOOST_UBLAS_ENABLE_PROXY_SHORTCUTS -DBOOST_UBLAS_TYPE_CHECK=0
 
 # compiler options that may vary (user can change)
-CXXFLAGS= 
-#BOOST_ROOT= /usr/local/boost_1_47_0
+CXXFLAGS= -g 
+BOOST_ROOT= $(BOOST_HOME)
+KONA_ROOT= $(KONA_HOME)
 
 # linker options
-# NOTE: -L is for linking, -Wl,-rpath is for loading
-#LDFLAGS= -lstdc++ -L$(BOOST_ROOT)/stage/lib -lboost_program_options
-LDFLAGS= -lstdc++
+LDFLAGS= -lstdc++ -llapack -L. -lboost_program_options -lm -L$(KONA_ROOT) -lkona
 
 # options that DO NOT vary
-#ALL_CXXFLAGS= -I. $(CXXFLAGS) -I $(BOOST_ROOT)
-ALL_CXXFLAGS= -I. $(CXXFLAGS)
+ALL_CXXFLAGS= -I. $(CXXFLAGS) -I$(BOOST_ROOT) -I$(KONA_ROOT)/src
 
-# source, object, and executable file names
-HEADERS= $(wildcard *.hpp)
-SOURCES= $(wildcard *.cpp)
+# directories
+SRC=../
+
+# source and object file names
+HEADERS= $(wildcard $(SRC)*.hpp *.hpp)
+HEADERS_ALL= $(HEADERS)
+SOURCES= $(wildcard $(SRC)*.cpp *cpp)
+SOURCES_ALL= $(SOURCES)
 OBJS= $(SOURCES:.cpp=.o)
-BINARIES= test_prob.bin
+OBJS_ALL= $(SOURCES_ALL:.cpp=.o)
+BINARIES= test_problem.bin
 
 # implicit rule
-%.o : %.cpp $(HEADERS) Makefile
+%.o : %.cpp $(HEADERS_ALL) Makefile
 	@echo "Compiling \""$@"\" from \""$<"\""
 	@$(CXX) $(CPPFLAGS) $(ALL_CXXFLAGS) -o $@ -c $<
 
@@ -45,9 +50,9 @@ tags: $(HEADERS) $(SOURCES)
 	@find -maxdepth 2 -iname '*.hpp' -print0 -o \
 	-iname '*.cpp' -print0 | xargs -0 etags
 
-test_prob.bin: $(OBJS) Makefile
+test_problem.bin: $(OBJS) Makefile
 	@echo "Compiling \""$@"\" from \""$(OBJS)"\""
-	@$(CXX) -o $@ $(OBJS) $(LDFLAGS) 
+	@$(CXX) -o $@ $(OBJS) $(LDFLAGS)
 
 clean:
 	@echo "deleting temporary, object, and binary files"

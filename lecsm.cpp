@@ -281,7 +281,7 @@ void LECSM::CalcStateVars()
   double y, realH;
   for (int i=0; i<nnp; i++) {
     xCoords_(i) += u_(3*i);
-    y = yCoords_(i) - u_(3*i+1);
+    y = yCoords_(i) + u_(3*i+1);
     realH = 2*(0.5*h_ - y);
     area_(i) = w_*realH;
   }
@@ -292,7 +292,7 @@ void LECSM::CalcStateVars()
 void LECSM::CalcResidual()
 {
   // Update the mesh from the latest displacements
-  UpdateMesh(u_);
+  geom_.Update(u_);
 
   // Generate the global equation number mapping
   int nnp = geom_.nnp;
