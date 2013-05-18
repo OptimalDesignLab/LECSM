@@ -357,10 +357,9 @@ void LECSM::Solve()
 #if 1
   printf("Printing global mapping for inspection:\n");
   for (int i=0; i<nnp; i++) {
-    for (int j=0; j<2; j++) {
-      for (int k=-; k<3; k++) {
-        printf("    gm[%i][%i][%i] = %d",gm[k][i][j]);
-      }
+    for (int j=0; j<3; j++) {
+      printf("    gm[%i][%i][%i] = %i", j, i, 0, gm[j][i][0]);
+      printf("    gm[%i][%i][%i] = %d", j, i, 1, gm[j][i][1]);
     }
   }
 #endif
