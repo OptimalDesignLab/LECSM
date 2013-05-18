@@ -117,5 +117,5 @@ public:
    * \brief update the mesh
    * \param[in] u_csm - nodal displacement vector
    */
-	void Update(const InnerProductVector& u_csm);
+	void Update(const InnerProdVector& u_csm);
 };
