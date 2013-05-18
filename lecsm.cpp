@@ -309,7 +309,6 @@ void LECSM::CalcResidual()
   // Calculate the stiffness matrix and the forcing vector
   GetStiff(gm, G, F, K);
   G.clear();
-  F.clear();
 
   int p;
   vector<double> u_dof(ndof);
@@ -333,6 +332,7 @@ void LECSM::CalcResidual()
   for (int i=0; i<ndof; i++)
     res_dof[i] = v_dof[i] - F[i];
   v_dof.clear();
+  F.clear();
 
   // Assemble the whole residual
   for (int i=0; i<nnp; i++) {
@@ -354,6 +354,16 @@ void LECSM::Solve()
   int nnp = geom_.nnp;
   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
   geom_.SetupEq(gm);
+#if 1
+  printf("Printing global mapping for inspection:\n");
+  for (int i=0; i<nnp; i++) {
+    for (int j=0; j<2; j++) {
+      for (int k=-; k<3; k++) {
+        printf("    gm[%i][%i][%i] = %d",gm[k][i][j]);
+      }
+    }
+  }
+#endif
 
   // Initiate global vectors used in the solver
   int ndof = geom_.ndof;
@@ -364,6 +374,14 @@ void LECSM::Solve()
 
   // Calculate the stiffness matrix and the forcing vector
   GetStiff(gm, G, F, K);
+#if 1
+  printf("Printing the stiffness matrix for inspection:\n");
+  printMatrix(K, ndof, ndof);
+  printf("Printing the forcing vector for inspection:\n");
+  for (int i=0; i<ndof; i++) {
+    printf("|   %f   |\n", F[i]);
+  }
+#endif
 
   // Solve the global Kd = F system
   vector<double> disp(ndof);
