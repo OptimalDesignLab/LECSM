@@ -42,19 +42,19 @@ public:
    * \brief returns a vector x coordinates for each node
    * \returns xCoords_ member value
    */
-	const InnerProdVector & get_x() const { return xCoords_; }
+	InnerProdVector & get_x() { return xCoords_; }
 
 	/*!
    * \brief returns a vector areas at each node
    * \returns area_ member value
    */
-	const InnerProdVector & get_area() const { return area_; }
+	InnerProdVector & get_area() { return area_; }
 
 	/*!
    * \brief returns the CSM residual vector
    * \returns res_ member value
    */
-	const InnerProdVector & get_res() const { return res_; }
+	InnerProdVector & get_res() { return res_; }
 
 	/*!
    * \brief sets the material properties for the CSM solver
