@@ -31,8 +31,7 @@ public:
 			xCoords_(nnp, 0.0),
 			res_(nnp, 0.0),
 			u_(3*nnp, 0.0),
-			P_(nnp, 0.0) 
-   { nnp_ nnp; }
+			P_(nnp, 0.0) { nnp_ = nnp; }
 
 	/*!
    * \brief default destructor

@@ -10,6 +10,7 @@
 #include "./lecsm.hpp"
 #include "./matrix_tools.hpp"
 #include "./output_tools.hpp"
+
 using namespace std;
 
 // =====================================================================
@@ -21,7 +22,7 @@ void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
   vector<Node> nodes;
   for (int i=0; i<nnp_; i++) {
     double c[2] = {x(i), y(i)};
-    node.CreateNode(i,c)
+    node.CreateNode(i,c);
     nodes.push_back(node);
   }
 
@@ -37,7 +38,7 @@ void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
     nodeR = nodes[i+1];
     elemNodes[0] = nodeL;
     elemNodes[1] = nodeR;
-    elem.CreateElem(j, elemNodes);
+    elem.CreateElem(i, elemNodes);
     elems.push_back(elem);
   }
 
@@ -56,7 +57,8 @@ void LECSM::SetBoundaryConds(const InnerProdVector & BCtype,
 {
   // Loop over all mesh nodes
   Node node;
-  double type[3], val[3];
+  int type[3];
+  double val[3];
   for (int i=0; i<nnp_; i++) {
     node = geom_.allNodes[i];
     for (int j=0; j<3; j++) {
@@ -246,8 +248,8 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
     len = elem.length;
 
     // Calculate the element node contribution
-    dFxdp = -w*len*c/4;
-    dFydp = -w*len*s/4;
+    dFxdp = -w_*len*c/4;
+    dFydp = -w_*len*s/4;
 
     // Add the element node contributions to the global derivative
     nodeL = elem.adjNodes[0];
@@ -290,12 +292,12 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 void LECSM::CalcStateVars()
 {
   int nnp = geom_.nnp;
-  double y, h;
+  double y, realH;
   for (int i=0; i<nnp; i++) {
-    xCoords(i) = u_(3*i);
+    xCoords_(i) = u_(3*i);
     y = u_(3*i+1);
     realH = 2*(0.5*h_ - y);
-    area(i) = w_*realH;
+    area_(i) = w_*realH;
   }
 }
 
@@ -320,6 +322,8 @@ void LECSM::CalcResidual()
 
   // Calculate the stiffness matrix and the forcing vector
   GetStiff(gm, G, F, K);
+  G.clear();
+  F.clear();
 
   int p;
   vector<double> u_dof(ndof);
@@ -336,22 +340,24 @@ void LECSM::CalcResidual()
   vector<double> v_dof(ndof);
   matrixVecMult(K, ndof, ndof, u_dof, ndof, v_dof);
   u_dof.clear();
+  K.clear();
 
   // Form the Ku-f residual for free nodes
   vector<double> res_dof(ndof);
   for (int i=0; i<ndof; i++)
     res_dof[i] = v_dof[i] - F[i];
+  v_dof.clear();
 
   // Assemble the whole residual
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3; j++) {
       if (gm[j][i][0] == 1)   // node is free
-        res_(3*i+j) = res[gm[j][i][1]];
+        res_(3*i+j) = res_dof[gm[j][i][1]];
       else  // node is fixed
         res_(3*i+j) = 0;
     }
   }
-
+  res_dof.clear();
 }
 
 // =====================================================================
