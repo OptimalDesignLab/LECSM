@@ -18,8 +18,6 @@ void Node::CreateNode(int num, double* c) {
   for (int i=0; i<3; i++) {
     coords[i] = c[i];
     type[i] = 1;            // node is initially free
-    dispBC[i] = NULL;       // no displacement BCs defined
-    forceBC[i] = 0;         // force and moment BCs are zero
   }             
 }
 
