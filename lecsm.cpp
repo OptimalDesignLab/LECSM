@@ -62,8 +62,8 @@ void LECSM::SetBoundaryConds(const InnerProdVector & BCtype,
   for (int i=0; i<nnp_; i++) {
     node = geom_.allNodes[i];
     for (int j=0; j<3; j++) {
-      type[i] = BCtype(3*i+j);  // extract BC type for the node
-      val[i] = BCval(3*i+j);  // extract BC value for the node
+      type[j] = BCtype(3*i+j);  // extract BC type for the node
+      val[j] = BCval(3*i+j);  // extract BC value for the node
     }
     // define the BC
     node.DefineBCs(type, val);
