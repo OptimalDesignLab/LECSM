@@ -52,8 +52,8 @@ void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
 
 // =====================================================================
 
-void LECSM::SetBoundaryConds(InnerProdVector & BCtype, 
-                             InnerProdVector & BCval)
+void LECSM::SetBoundaryConds(const InnerProdVector & BCtype, 
+                             const InnerProdVector & BCval)
 {
   // Loop over all mesh nodes
   Node node;
