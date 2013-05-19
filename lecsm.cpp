@@ -66,6 +66,12 @@ void LECSM::SetBoundaryConds(const InnerProdVector & BCtype,
     // define the BC
     geom_.allNodes[i].DefineBCs(type, val);
   }
+
+  // Cascade the nodal changes into their elements
+  for (int i=0; i<geom_.nel; i++) {
+    geom_.allElems[i].adjNodes[0] = geom_.allNodes[i];
+    geom_.allElems[i].adjNodes[1] = geom_.allNodes[i+1];
+  }
 }
 
 // =====================================================================
@@ -223,24 +229,29 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
   Element elem;
   Node nodeL, nodeR;
   int idL, idR;
-  double len, c, s, dFxdp, dFydp;
+  double x1, x2, y1, y2, len, c, s, dFxdp, dFydp;
   for (int i=0; i<nel; i++) {
     // Initialize element parameters
     elem = geom_.allElems[i];
-    c = elem.cosine;
-    s = elem.sine;
-    len = elem.length;
+    nodeL = elem.adjNodes[0];
+    nodeR = elem.adjNodes[1];
+    idL = nodeL.id;
+    idR = nodeR.id;
+
+    // Calculate element length and orientation
+    x1 = nodeL.coords[0];
+    x2 = nodeR.coords[0];
+    y1 = nodeL.coords[1];
+    y2 = nodeR.coords[1];
+    len = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+    c = (x2 - x1)/len;
+    s = (y2 - y1)/len;
 
     // Calculate the element node contribution
     dFxdp = -w_*len*c/4;
     dFydp = -w_*len*s/4;
 
     // Add the element node contributions to the global derivative
-    nodeL = elem.adjNodes[0];
-    nodeR = elem.adjNodes[1];
-    idL = nodeL.id;
-    idR = nodeR.id;
-
     dSdu[3*idL][idL] += dFxdp;
     dSdu[3*idL+1][idL] += dFydp;
     // dSdu[3*idL+2][idL] = 0 // Moment term (pressure independent)

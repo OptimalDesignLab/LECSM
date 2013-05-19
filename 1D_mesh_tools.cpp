@@ -36,15 +36,6 @@ Element::Element(int num, vector<Node> nodes) {
   id = num;
   nen = nodes.size();
   adjNodes = nodes;
-  Node nodeL = adjNodes[0];
-  Node nodeR = adjNodes[1];
-  double x1 = nodeL.coords[0];
-  double x2 = nodeR.coords[0];
-  double y1 = nodeL.coords[1];
-  double y2 = nodeR.coords[1];
-  length = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
-  cosine = (x2 - x1)/length;
-  sine = (y2 - y1)/length;
 }
 
 // =====================================================================
@@ -59,6 +50,15 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
   Node nodeR = adjNodes[1];
   int idL = nodeL.id;
   int idR = nodeR.id;
+
+  // Calculate the element length and orientation
+  double x1 = nodeL.coords[0];
+  double x2 = nodeR.coords[0];
+  double y1 = nodeL.coords[1];
+  double y2 = nodeR.coords[1];
+  double length = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+  double cosine = (x2 - x1)/length;
+  double sine = (y2 - y1)/length;
 
   // Generate the local equation mapping
   lm[0][0][0] = gm[0][idL][0];
@@ -145,7 +145,8 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
   double p1 = P[0];
   double p2 = P[1];
   double Pave = 0.5*(p1+p2);
-  double f_hat = -Pave*length*w/2;
+  double area = length*w;
+  double f_hat = -Pave*area/2;
   double fy = f_hat*cosine;
   double fx = f_hat*sine;
   FE[0] = fx + nodeL.forceBC[0];
@@ -154,6 +155,42 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
   FE[3] = fx + nodeR.forceBC[0];
   FE[4] = fy + nodeR.forceBC[1];
   FE[5] = nodeR.forceBC[2];
+
+#if 0
+  printf("ELEMENT %i\n", id);
+  printf("======================\n");
+  printf("\n");
+
+// Inspect element node properties
+  printf("Node L :: id %i :: ( %f, %f ) :: {%i, %i, %i}\n",
+    idL, x1, y1, nodeL.type[0], nodeL.type[1], nodeL.type[2]);
+  printf("    %f Pascals :: [ %f, %f, %f] Newtons\n", p1,
+    nodeL.forceBC[0], nodeL.forceBC[1], nodeL.forceBC[2]);
+  printf("Node R :: id %i :: ( %f, %f ) :: {%i, %i, %i}\n",
+    idR, x2, y2, nodeR.type[0], nodeR.type[1], nodeR.type[2]);
+  printf("    %f Pascals :: [ %f, %f, %f] Newtons\n", p2,
+    nodeR.forceBC[0], nodeR.forceBC[1], nodeR.forceBC[2]);
+  printf("\n");
+
+// Inpsect element properties
+  double PI = 3.14159265;
+  double acosine = acos(cosine)*180.0/PI;
+  printf("Orientation: cos = %f, sin = %f, theta = %f\n",
+    cosine, sine, acosine);
+  printf("Area: %f || Length: %f\n", area, length);
+  printf("\n");
+
+// Inspect element stiffness matrix and vector
+  printf("  Element stiffness matrix:\n");
+  printMatrix(KE, nen*3, nen*3);
+  printf("\n");
+  printf("  Element force vector:\n");
+  for (int i=0; i<nen*3; i++)
+    printf("|  %f  |\n", FE[i]);
+  printf("\n");
+  printf("======================\n");
+  printf("\n");
+#endif
 
   // Clean-up
   T.clear();
@@ -251,8 +288,13 @@ void Mesh::Update(const InnerProdVector& u_csm)
 {
   // Loop over mesh nodes and update their coordinates
   for (int i=0; i<nnp; i++) {
-    Node node = allNodes[i];
-    node.coords[0] += u_csm(3*i);
-    node.coords[1] += u_csm(3*i+1);
+    allNodes[i].coords[0] += u_csm(3*i);
+    allNodes[i].coords[1] += u_csm(3*i+1);
+  }
+
+  // Cascade the changes into the elements
+  for (int i=0; i<nel; i++) {
+    allElems[i].adjNodes[0] = allNodes[i];
+    allElems[i].adjNodes[1] = allNodes[i+1];
   }
 }

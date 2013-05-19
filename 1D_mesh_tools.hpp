@@ -59,7 +59,6 @@ public:
 class Element {
 public:
 	int id, nen;
-	double length, cosine, sine;
 	vector<Node> adjNodes;
 
   Element() {}
