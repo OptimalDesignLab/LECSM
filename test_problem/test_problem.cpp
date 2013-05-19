@@ -16,14 +16,14 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 5;
+	int nnp = 6;
 	LECSM csm(nnp);
 
 	// Define material properties
-	double E = 100000000;		// Young's Modulus (Rubber) (Pa)
-	double t = 0.03;				// Thickness of the beam elements (meters)
-	double w = 1;					  // Width of the domain (meters)
-	double h = 1;						// Height of the domain (meters)
+	double E = 100000000; // Young's Modulus (Rubber) (Pa)
+	double t = 0.03;				  // Thickness of the beam elements (meters)
+	double w = 1;					// Width of the beam elements (meters)
+	double h = 1;						// Maximum nozzle height (meters)
 	csm.set_material(E, t, w, h);
 
 	// Create problem mesh
@@ -35,11 +35,30 @@ int main() {
     // evenly spaced nodes along the x
     x_coord(i) = i*length/(nnp-1);
     // parabolic nozzle wall for y coords
-    y_coord(i) = 0.01*(length-x_coord(i))*x_coord(i);
+    y_coord(i) = 0.1*(length-x_coord(i))*x_coord(i);
   }
   csm.GenerateMesh(x_coord, y_coord);
 
-  // determine the nodal structural boundary conditions
+#if 0
+  // Boundary conditions for cantilever beam with end load
+  InnerProdVector BCtype(3*nnp, 0.0);
+  InnerProdVector BCval(3*nnp, 0.0);
+  for (int i=0; i<nnp; i++) {
+    BCtype(3*i) = -1;
+    BCtype(3*i+1) = -1;
+    BCtype(3*i+2) = -1;
+    BCval(3*i) = 0;
+    BCval(3*i+1) = 0;
+    BCval(3*i+2) = 0;
+  }
+  BCtype(0) = 0;
+  BCtype(1) = 0;
+  BCtype(2) = 0;
+  BCtype(3*nnp-2) = 1;
+  BCval(3*nnp-2) = 1000;
+#endif
+#if 1
+  // Boundary conditions for parabolic nozzle
   InnerProdVector BCtype(3*nnp, 0.0);
   InnerProdVector BCval(3*nnp, 0.0);
   for (int i=0; i<nnp; i++) {
@@ -52,19 +71,21 @@ int main() {
   }
   BCtype(0) = 0;
   BCtype(1) = 0;
-  BCtype(2) = -1;
+  BCtype(2) = 0;
   BCtype(3*nnp-3) = 0;
   BCtype(3*nnp-2) = 0;
-  BCtype(3*nnp-1) = -1;
+  BCtype(3*nnp-1) = 0;
+#endif
   csm.SetBoundaryConds(BCtype, BCval);
 
   // Specify pressure
-  InnerProdVector press(nnp, 20.0);
+  InnerProdVector press(nnp, 50.0);
   csm.set_press(press);
 
 	// Call FEA solver
 	csm.Solve();
 
+#if 0
 	csm.CalcResidual();
 	InnerProdVector & res = csm.get_res();
 
@@ -72,6 +93,7 @@ int main() {
 	for(int i=0; i<3*nnp; i++) {
 		printf("|  %f  |\n", res(i));
 	}
+#endif
 
 	return 0;
 }
