@@ -89,6 +89,20 @@ int main() {
   csm.set_press(press);
 
 // =====================================================================
+// INSPECT THE RESIDUAL
+// =====================================================================  
+
+#if 0
+  csm.CalcResidual();
+  InnerProdVector & res = csm.get_res();
+
+  printf("Printing residual for inspection:\n");
+  for(int i=0; i<3*nnp; i++) {
+    printf("|  %f  |\n", res(i));
+  }
+#endif
+
+// =====================================================================
 // VALIDATING THE PARTIAL DERIVATIVES
 // =====================================================================
 
@@ -169,26 +183,9 @@ int main() {
     double diff = vU(i) - outU(i);
     printf("%i th difference: %f\n", i, diff);
   }
-
-
-
 #else
   // Call FEA solver
   csm.Solve();
-#endif
-
-// =====================================================================
-// VALIDATING THE RESIDUAL
-// =====================================================================	
-
-#if 0
-	csm.CalcResidual();
-	InnerProdVector & res = csm.get_res();
-
-	printf("Printing residual for inspection:\n");
-	for(int i=0; i<3*nnp; i++) {
-		printf("|  %f  |\n", res(i));
-	}
 #endif
 
 	return 0;
