@@ -57,6 +57,12 @@ public:
    */
 	InnerProdVector & get_res() { return res_; }
 
+  /*!
+   * \brief returns the CSM displacement vector
+   * \returns u_ member value
+   */
+  InnerProdVector & get_u() { return u_; }
+
 	/*!
    * \brief sets the material properties for the CSM solver
    * \param[in] E - young's modulus
@@ -68,10 +74,10 @@ public:
       E_ = E; t_ = t; w_ = w; h_ = h;}
 
 	/*!
-   * \brief sets the displacement vector for the CSM solver
+   * \brief updates the CSM mesh with displacements
    * \param[in] u_csm - vector of displacements (3*nnp)
    */
-	void set_u(const InnerProdVector & u_csm) { u_ = u_csm; }
+	void set_u(const InnerProdVector & u_csm);
 
 	/*!
    * \brief sets the pressure values at each node
@@ -135,9 +141,9 @@ public:
 	void Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd);
 
 	/*!
-   * \brief calculates the state variables (xCoords_ and area_)
+   * \brief calculates the nozzle area and stores in area_
    */
-	void CalcStateVars();
+	void CalcArea();
 
 	/*!
    * \brief calculates the CSM residual using u_ displacements
@@ -148,7 +154,7 @@ public:
    * \brief inspects the solver mesh
    */
   void InspectMesh() {
-    geom_.InspectNodes();
+    geom_.InspectElements();
   }
 
 	/*!

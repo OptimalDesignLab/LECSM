@@ -254,6 +254,33 @@ void Mesh::InspectNodes()
 
 // =====================================================================
 
+void Mesh::InspectElements()
+{
+  for (int i=0; i<nel; i++) {
+    Element elem = allElems[i];
+    Node nodeL = elem.adjNodes[0];
+    Node nodeR = elem.adjNodes[1];
+    double x1 = nodeL.coords[0];
+    double x2 = nodeR.coords[0];
+    double y1 = nodeL.coords[1];
+    double y2 = nodeR.coords[1];
+    double len = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+    double c = (x2-x1)/len;
+    double s = (y2-y1)/len;
+    double theta = acos(c)*180/3.14;
+    printf("ELEMENT %i:\n", elem.id);
+    printf("==============================================\n");
+    printf("  Node L :: id %i :: ( %f, %f ) :: {%i, %i, %i}\n", nodeL.id,
+      x1, y1, nodeL.type[0], nodeL.type[1], nodeL.type[2]);
+    printf("  Node L :: id %i :: ( %f, %f ) :: {%i, %i, %i}\n", nodeR.id,
+      x2, y2, nodeR.type[0], nodeR.type[1], nodeR.type[2]);
+    printf("  Length: %f || Cos: %f || Sin: %f || Theta %f\n", len, c, s, theta);
+  }
+  printf("\n");
+}
+
+// =====================================================================
+
 void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
 {
   ndof = 0;
@@ -286,10 +313,13 @@ void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
 
 void Mesh::Update(const InnerProdVector& u_csm)
 {
-  // Loop over mesh nodes and update their coordinates
+  // Loop over mesh nodes and perturb their coordinates
+  // in the appropriate direction only if it's not fixed
   for (int i=0; i<nnp; i++) {
-    allNodes[i].coords[0] += u_csm(3*i);
-    allNodes[i].coords[1] += u_csm(3*i+1);
+    for (int k=0; k<2; k++) {
+      if (allNodes[i].type[k] == 1)
+        allNodes[i].coords[k] += u_csm(3*i+k);
+    }
   }
 
   // Cascade the changes into the elements

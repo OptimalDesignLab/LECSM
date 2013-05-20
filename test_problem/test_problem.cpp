@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 6;
+	int nnp = 3;
 	LECSM csm(nnp);
 
 	// Define material properties
@@ -39,8 +39,13 @@ int main() {
   }
   csm.GenerateMesh(x_coord, y_coord);
 
+// =====================================================================
+// BOUNDARY CONDITIONS
+// =====================================================================
+
 #if 0
-  // Boundary conditions for cantilever beam with end load
+  // ~~~~~ CANTILEVER BEAM ~~~~~
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
   InnerProdVector BCtype(3*nnp, 0.0);
   InnerProdVector BCval(3*nnp, 0.0);
   for (int i=0; i<nnp; i++) {
@@ -56,9 +61,9 @@ int main() {
   BCtype(2) = 0;
   BCtype(3*nnp-2) = 1;
   BCval(3*nnp-2) = 1000;
-#endif
-#if 1
-  // Boundary conditions for parabolic nozzle
+#else
+  // ~~~~~ PARABOLIC NOZZLE ~~~~~
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   InnerProdVector BCtype(3*nnp, 0.0);
   InnerProdVector BCval(3*nnp, 0.0);
   for (int i=0; i<nnp; i++) {
@@ -78,12 +83,103 @@ int main() {
 #endif
   csm.SetBoundaryConds(BCtype, BCval);
 
-  // Specify pressure
-  InnerProdVector press(nnp, 50.0);
+  // ~~~~~ NODAL PRESSURES ~~~~~
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  InnerProdVector press(nnp, 0.0);
   csm.set_press(press);
 
-	// Call FEA solver
-	csm.Solve();
+// =====================================================================
+// VALIDATING THE PARTIAL DERIVATIVES
+// =====================================================================
+
+#if 1
+  // csm.InspectMesh();
+
+  InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0);
+  InnerProdVector outU(nnp,0.0), outP(3*nnp,0.0);
+  InnerProdVector vU(nnp,0.0), vP(3*nnp,0.0);
+  double delta = 1.e-6;
+
+  // Perform (dS/dp) product with the built-in routine
+  csm.Calc_dSdp_Product(wrkP, vP);
+  
+  // Calculate (dS/dp) with finite differencing
+  csm.CalcResidual();
+  InnerProdVector res1 = csm.get_res();
+  vector< vector<double> > dSdp(3*nnp, vector<double>(nnp));
+  for (int i=0; i<nnp; i++) {
+    press(i) += delta;
+    csm.set_press(press);
+    csm.CalcResidual();
+    InnerProdVector res2 = csm.get_res();
+    for (int j=0; j<3*nnp; j++) {
+      dSdp[j][i] = (res2(j) - res1(j))/delta;
+    }
+    press(i) -= delta;
+  }
+
+  // Multiply (dS/dP)*wrkP
+  for (int i=0; i<3*nnp; i++) {
+    for (int j=0; j<nnp; j++) {
+      outP(i) += dSdp[i][j] * wrkP(j);
+    }
+  }
+
+  // Validate by seeing if the difference is zero
+  printf("(dS/dp) product:\n");
+  printf("---------------------\n");
+  for (int i=0; i<3*nnp; i++) {
+    double diff = vP(i) - outP(i);
+    printf("%i th difference: %f\n", i, diff);
+  }
+
+  // Perform (dA/du) product with the built-in routine
+  csm.Calc_dAdu_Product(wrkU, vU);
+
+  // Calculate (dA/du) with finite differencing
+  csm.CalcArea();
+  InnerProdVector area1 = csm.get_area();
+  vector< vector<double> > dAdu(nnp, vector<double>(3*nnp));
+  InnerProdVector u(3*nnp, 0.0);
+  for (int i=0; i<3*nnp; i++) {
+    u(i) = delta;
+    csm.set_u(u);
+    csm.CalcArea();
+    InnerProdVector area2 = csm.get_area();
+    for (int j=0; j<nnp; j++) {
+      dAdu[j][i] = (area2(j) - area1(j))/delta;
+    }
+    // Reset mesh back to original
+    u(i) = -delta;
+    csm.set_u(u);
+    u(i) = 0;
+  }
+
+  // Multiply (dA/du)*wrkU
+  for (int i=0; i<nnp; i++) {
+    for (int j=0; j<3*nnp; j++) {
+      outU(i) += dAdu[i][j] * wrkU(j);
+    }
+  }
+
+  // Validate by seeing if the difference is zero
+  printf("(dA/du) product:\n");
+  printf("---------------------\n");
+  for (int i=0; i<nnp; i++) {
+    double diff = vU(i) - outU(i);
+    printf("%i th difference: %f\n", i, diff);
+  }
+
+
+
+#else
+  // Call FEA solver
+  csm.Solve();
+#endif
+
+// =====================================================================
+// VALIDATING THE RESIDUAL
+// =====================================================================	
 
 #if 0
 	csm.CalcResidual();

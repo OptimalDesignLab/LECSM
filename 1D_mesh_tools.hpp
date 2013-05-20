@@ -142,6 +142,8 @@ public:
 
   void InspectNodes();
 
+  void InspectElements();
+
 	/*!
    * \brief generate the global equation number map
    * \param[out] gm - global equation number mapping

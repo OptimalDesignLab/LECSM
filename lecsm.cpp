@@ -13,6 +13,17 @@
 
 using namespace std;
 
+void LECSM::set_u(const InnerProdVector & u_csm)
+{ 
+  u_ = u_csm;
+  geom_.Update(u_);
+  for (int i=0; i<nnp_; i++) {
+    Node node = geom_.allNodes[i];
+    xCoords_(i) = node.coords[0];
+    yCoords_(i) = node.coords[1];
+  }
+}
+
 // =====================================================================
 
 void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
@@ -205,8 +216,21 @@ void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
 void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
 {
   int nnp = geom_.nnp;
+  vector< vector<double> > dAdu(nnp, vector<double>(3*nnp));
   for (int i=0; i<nnp; i++) {
-    wrk(i) = -w_ * u_csm(3*i+1);
+    Node node = geom_.allNodes[i];
+    dAdu[i][3*i] = 0;
+    if (node.type[1] == 1)
+      dAdu[i][3*i+1] = -2*w_;
+    else
+      dAdu[i][3*i+1] = 0;
+    dAdu[i][3*i+2] = 0;
+  }
+
+  for (int i=0; i<nnp; i++) {
+    for (int j=0; j<3*nnp; j++) {
+      wrk(i) += dAdu[i][j] * u_csm(j);
+    }
   }
 }
 
@@ -216,10 +240,10 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 {
   // Initialize the global derivative matrix
   int nnp = geom_.nnp;
-  vector< vector<double> > dSdu(nnp*3, vector<double>(nnp));
+  vector< vector<double> > dSdp(nnp*3, vector<double>(nnp));
   for (int i=0; i<nnp*3; i++) {
     for (int j=0; j<nnp; j++) {
-      dSdu[i][j] = 0;
+      dSdp[i][j] = 0;
     }
   }
 
@@ -228,15 +252,18 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
   int nel = geom_.nel;
   Element elem;
   Node nodeL, nodeR;
-  int idL, idR;
+  int idE, idL, idR, type[3];
   double x1, x2, y1, y2, len, c, s, dFxdp, dFydp;
+  vector< vector<double> > dSdp_elem(nnp*3, vector<double>(nnp));
   for (int i=0; i<nel; i++) {
     // Initialize element parameters
     elem = geom_.allElems[i];
+    idE = elem.id;
     nodeL = elem.adjNodes[0];
     nodeR = elem.adjNodes[1];
     idL = nodeL.id;
     idR = nodeR.id;
+    vector< vector<double> > dSdp_elem(6, vector<double>(2));
 
     // Calculate element length and orientation
     x1 = nodeL.coords[0];
@@ -248,47 +275,50 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
     s = (y2 - y1)/len;
 
     // Calculate the element node contribution
-    dFxdp = -w_*len*c/4;
-    dFydp = -w_*len*s/4;
+    dFxdp = -w_*len*s/4;
+    dFydp = w_*len*c/4;
+    dSdp_elem[0][0] = dFxdp;
+    dSdp_elem[1][0] = dFydp;
+    dSdp_elem[2][0] = 0; // Moment term (pressure independent)
+    dSdp_elem[0][1] = dFxdp;
+    dSdp_elem[1][1] = dFydp;
+    dSdp_elem[2][1] = 0; // Moment term (pressure independent)
 
-    // Add the element node contributions to the global derivative
-    dSdu[3*idL][idL] += dFxdp;
-    dSdu[3*idL+1][idL] += dFydp;
-    // dSdu[3*idL+2][idL] = 0 // Moment term (pressure independent)
-    dSdu[3*idL][idR] += dFxdp;
-    dSdu[3*idL+1][idR] += dFydp;
-    // dSdu[3*idL+2][idR] = 0 // Moment term (pressure independent)
-    dSdu[3*idR][idL] += dFxdp;
-    dSdu[3*idR+1][idR] += dFydp;
-    // dSdu[3*idR+2][idR] = 0 // Moment term (pressure independent)
-    dSdu[3*idR][idL] += dFxdp;
-    dSdu[3*idR+1][idL] += dFydp;
-    // dSdu[3*idR+2][idL] = 0 // Moment term (pressure independent)
+    for (int k=0; k<3; k++) {
+      if (nodeL.type[k] == 1) {
+        dSdp[3*idL+k][idE] += dSdp_elem[k][0];
+        dSdp[3*idL+k][idE+1] += dSdp_elem[k][1];
+      }
+      if (nodeR.type[k] == 1) {
+        dSdp[3*idR+k][idE] += dSdp_elem[k][0];
+        dSdp[3*idR+k][idE+1] += dSdp_elem[k][1];
+      }
+    }
+
+    dSdp_elem.clear();
   }
 
   // Calculate (dS/du)*wrk
   for (int i=0; i<nnp*3; i++) {
-    u_cfd(i) = 0; // initialize the row
     for (int j=0; j<nnp; j++) {
-      u_cfd(i) += dSdu[i][j] * wrk(j); // perform the multiplication
+      u_cfd(i) += dSdp[i][j] * wrk(j); // perform the multiplication
     }
   }
 
   // Clean-up
-  dSdu.clear();
+  dSdp.clear();
 }
 
 // =====================================================================
 
-void LECSM::CalcStateVars()
+void LECSM::CalcArea()
 {
   int nnp = geom_.nnp;
-  double y, realH;
+  double y, meshH;
   for (int i=0; i<nnp; i++) {
-    xCoords_(i) += u_(3*i);
-    y = yCoords_(i) + u_(3*i+1);
-    realH = 2*(0.5*h_ - y);
-    area_(i) = w_*realH;
+    y = yCoords_(i);
+    meshH = 2*(0.5*h_ - y);
+    area_(i) = w_*meshH;
   }
 }
 
@@ -296,9 +326,6 @@ void LECSM::CalcStateVars()
 
 void LECSM::CalcResidual()
 {
-  // Update the mesh from the latest displacements
-  geom_.Update(u_);
-
   // Generate the global equation number mapping
   int nnp = geom_.nnp;
   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
