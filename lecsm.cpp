@@ -297,9 +297,12 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 
   // Calculate (dS/du)*wrk
   for (int i=0; i<nnp*3; i++) {
+    printf("|")
     for (int j=0; j<nnp; j++) {
       u_cfd(i) += dSdp[i][j] * wrk(j); // perform the multiplication
+      printf(" %f ", dSdp[i][j]);
     }
+    printf("|\n");
   }
 
   // Clean-up
