@@ -217,6 +217,7 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     dAdu[i][3*i] = 0;
+    wrk(i) = 0;
     if (node.type[1] == 1)
       dAdu[i][3*i+1] = -2*w_;
     else
@@ -235,10 +236,11 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
 
 void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 {
-  // Initialize the global derivative matrix
+  // Initialize the global derivative matrix and zero out the resultant
   int nnp = geom_.nnp;
   vector< vector<double> > dSdp(nnp*3, vector<double>(nnp));
   for (int i=0; i<nnp*3; i++) {
+    u_cfd(i) = 0;
     for (int j=0; j<nnp; j++) {
       dSdp[i][j] = 0;
     }
@@ -251,7 +253,6 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
   Node nodeL, nodeR;
   int idE, idL, idR, type[3];
   double x1, x2, y1, y2, len, c, s, dFxdp, dFydp;
-  vector< vector<double> > dSdp_elem(nnp*3, vector<double>(nnp));
   for (int i=0; i<nel; i++) {
     // Initialize element parameters
     elem = geom_.allElems[i];
@@ -297,12 +298,12 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 
   // Calculate (dS/du)*wrk
   for (int i=0; i<nnp*3; i++) {
-    printf("|");
-    for (int j=0; j<nnp; j++) {
-      u_cfd(i) += dSdp[i][j] * wrk(j); // perform the multiplication
-      printf(" %f ", dSdp[i][j]);
+    // printf("|");
+    for (int k=0; k<nnp; k++) {
+      u_cfd(i) += dSdp[i][k] * wrk(k); // perform the multiplication
+      // printf(" %f ", dSdp[i][k]);
     }
-    printf("|\n");
+    // printf("|\n");
   }
 
   // Clean-up
