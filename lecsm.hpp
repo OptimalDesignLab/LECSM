@@ -146,7 +146,7 @@ public:
 	void CalcArea();
 
 	/*!
-   * \brief calculates the CSM residual using u_ displacements
+   * \brief calculates the CSM residual based on displacements in u_
    */
 	void CalcResidual();
 

@@ -63,7 +63,7 @@ void matrixVecMult(vector< vector<double> >& A, int rowA, int colA,
   {
     for (int j = 0; j < colA; j++)
     {
-      AB[i] = AB[i] + A[i][j]*B[i];
+      AB[i] += A[i][j]*B[j];
     }
   }
 }

@@ -16,11 +16,12 @@ using namespace std;
 void LECSM::set_u(const InnerProdVector & u_csm)
 { 
   u_ = u_csm;
-  geom_.Update(u_);
   for (int i=0; i<nnp_; i++) {
     Node node = geom_.allNodes[i];
-    xCoords_(i) = node.coords[0];
-    yCoords_(i) = node.coords[1];
+    if (node.type[0] == 1)
+      xCoords_(i) += u_csm(3*i);
+    if (node.type[1] == 1)
+      yCoords_(i) += u_csm(3*i+1);
   }
 }
 
@@ -191,16 +192,12 @@ void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3; j++) {
       a = (i*3)+j;
-      if (gm[j][i][0] == 0) {       // node dof is fixed (zero)
-        v_csm(a) = 0;
-      }
-      else if (gm[j][i][0] == 1) {  // node dof is free
+      if (gm[j][i][0] == 1) {  // node dof is free
         b = gm[j][i][1];
         v_csm(a) = v_dof[b];
       }
-      else if (gm[j][i][0] == 2) {  // node dof is fixed (prescribed)
-
-      }
+      else
+        v_csm(a) = 0;
     }
   }
 
@@ -383,7 +380,7 @@ void LECSM::CalcResidual()
 void LECSM::Solve()
 {
 #if 1
-  geom_.InspectNodes();
+  geom_.InspectElements();
 #endif
 
   // Generate the global equation number mapping
@@ -424,7 +421,26 @@ void LECSM::Solve()
   CGSolve(K, ndof, ndof, F, ndof, maxIt, disp);
 
   // Assemble the nodal displacements
-  vector< vector<double> > du(nnp, vector<double>(2));
-  printf("Outputting displacements...\n");
-  output_disp(nnp, G, gm, disp, du);
+  printf("Directions:\n");
+  printf("  0 - x-axis\n");
+  printf("  1 - y-axis\n");
+  printf("  2 - rotation about z-axis\n");
+  for (int A = 0; A < nnp; A++)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      int t = gm[i][A][0];
+      double P = gm[i][A][1];
+      if (t == 1)             // dof
+        {u_(3*A+i) = disp[P];}
+      else
+        {
+          if (t == 2)          // dog
+            {u_(3*A+i) = G[P];}
+          else
+            {u_(3*A+i) = 0;}
+        }
+      printf("    Node %d displaced %f in direction %d\n", A, u_(3*A+i), i);
+    }
+  }
 }

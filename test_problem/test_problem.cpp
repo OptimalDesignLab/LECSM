@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 3;
+	int nnp = 21;
 	LECSM csm(nnp);
 
 	// Define material properties
@@ -85,22 +85,8 @@ int main() {
 
   // ~~~~~ NODAL PRESSURES ~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  InnerProdVector press(nnp, 0.0);
+  InnerProdVector press(nnp, 50.0);
   csm.set_press(press);
-
-// =====================================================================
-// INSPECT THE RESIDUAL
-// =====================================================================  
-
-#if 0
-  csm.CalcResidual();
-  InnerProdVector & res = csm.get_res();
-
-  printf("Printing residual for inspection:\n");
-  for(int i=0; i<3*nnp; i++) {
-    printf("|  %f  |\n", res(i));
-  }
-#endif
 
 // =====================================================================
 // VALIDATING THE PARTIAL DERIVATIVES
@@ -122,6 +108,7 @@ int main() {
   InnerProdVector res1 = csm.get_res();
   vector< vector<double> > dSdp(3*nnp, vector<double>(nnp));
   for (int i=0; i<nnp; i++) {
+    // preturb the pressure on i-th node
     press(i) += delta;
     csm.set_press(press);
     csm.CalcResidual();
@@ -129,6 +116,7 @@ int main() {
     for (int j=0; j<3*nnp; j++) {
       dSdp[j][i] = (res2(j) - res1(j))/delta;
     }
+    // reset the perturbation before testing next node
     press(i) -= delta;
   }
 
@@ -156,15 +144,16 @@ int main() {
   vector< vector<double> > dAdu(nnp, vector<double>(3*nnp));
   InnerProdVector u(3*nnp, 0.0);
   for (int i=0; i<3*nnp; i++) {
-    u(i) = delta;
+    // perturb displacement in the i-th degree of freedom
+    u(i) += delta;
     csm.set_u(u);
     csm.CalcArea();
     InnerProdVector area2 = csm.get_area();
     for (int j=0; j<nnp; j++) {
       dAdu[j][i] = (area2(j) - area1(j))/delta;
     }
-    // Reset mesh back to original
-    u(i) = -delta;
+    // undo the displacement before testing the next degree of freedom
+    u(i) -= 2*delta;
     csm.set_u(u);
     u(i) = 0;
   }
@@ -186,6 +175,20 @@ int main() {
 #else
   // Call FEA solver
   csm.Solve();
+#endif
+
+// =====================================================================
+// INSPECT THE RESIDUAL
+// =====================================================================  
+
+#if 0
+  csm.CalcResidual();
+  InnerProdVector & res = csm.get_res();
+
+  printf("Printing residual for inspection:\n");
+  for(int i=0; i<3*nnp; i++) {
+    printf("|  %f  |\n", res(i));
+  }
 #endif
 
 	return 0;
