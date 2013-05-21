@@ -175,7 +175,7 @@ void LECSM::GetStiff(vector< vector< vector<int> > >& gm,
 
 // =====================================================================
 
-void LECSM::CalcPrecondProduct(InnerProdVector& in, InnerProdVector& out)
+void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
 {
   // Map out the global equation numbers
   int nnp = geom_.nnp;

@@ -155,7 +155,7 @@ public:
    * \param[in] wrk - [(dR/dA)^T]*u_csm vector
    * \param[out] v_csm - CSM right-hand-side vector
    */
-   void Calc_dAdu_TransProduct(InnerProdvector& wrk, InnerProdVector& v_csm);
+   void Calc_dAdu_TransProduct(InnerProdVector& wrk, InnerProdVector& v_csm);
 
 	/*!
    * \brief calculates the (dS/dp)*(dp/dq)*u_csm product
