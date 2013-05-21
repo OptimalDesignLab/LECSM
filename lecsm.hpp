@@ -129,6 +129,13 @@ public:
 								vector<double>& G, vector<double>& F,
                 vector< vector<double> >& K);
 
+  /*!
+   * \brief preconditions the input vector with the diagonal of the system stiffness matrix
+   * \param[in] in - un-preconditioned vector
+   * \param[out] v_csm - preconditioned vector
+   */
+  void Precondition(InnerProdVector& in, InnerProdVector& out);
+
 	/*!
    * \brief calculates the (dS/du)*u_csm product
    * \param[in] u_csm - displacement vector
@@ -143,12 +150,26 @@ public:
    */
 	void Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk);
 
+   /*!
+   * \brief calculates the [(dA/du)^T]*[(dR/dA)^T]*u_csm product
+   * \param[in] wrk - [(dR/dA)^T]*u_csm vector
+   * \param[out] v_csm - CSM right-hand-side vector
+   */
+   void Calc_dAdu_TransProduct(InnerProdvector& wrk, InnerProdVector& v_csm);
+
 	/*!
-   * \brief calculates the (dS/dp)*(dp/dq)*u_cfd product
+   * \brief calculates the (dS/dp)*(dp/dq)*u_csm product
    * \param[in] wrk - (dp/dq)*u_cfd vector
    * \param[out] v_csm - product vector
    */
-	void Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd);
+	void Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_csm);
+
+   /*!
+   * \brief calculates the [(dS/dp)^T]*u_cfd product
+   * \param[in] u_cfd - CFD solution vector
+   * \param[out] wrk - product vector
+   */
+   void Calc_dSdp_TransProduct(InnerProdVector& u_cfd, InnerProdVector& wrk);
 
 	/*!
    * \brief calculates the nozzle area and stores in area_
@@ -179,6 +200,7 @@ private:
 	InnerProdVector res_;
 	InnerProdVector u_;
 	InnerProdVector P_;
+  vector< vector<double> > K_;
 	int nnp_;
 	double E_, w_, t_, h_;
 	Mesh geom_;
