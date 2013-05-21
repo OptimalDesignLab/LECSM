@@ -205,7 +205,6 @@ void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
   }
   K.clear();
 
-  
 }
 
 // =====================================================================
@@ -293,7 +292,7 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
 
 // =====================================================================
 
-void LECSM::Calc_dAdu_TransProduct(InnerProdVector& wrk, InnerProdVector& v_csm)
+void LECSM::CalcTrans_dAdu_Product(InnerProdVector& wrk, InnerProdVector& v_csm)
 {
   int nnp = geom_.nnp;
   vector< vector<double> > dAdu(nnp, vector<double>(3*nnp));
@@ -397,7 +396,7 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 
 // =====================================================================
 
-void LECSM::Calc_dSdp_TransProduct(InnerProdVector& u_cfd, InnerProdVector& wrk)
+void LECSM::CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk)
 {
   // Initialize the global derivative matrix and zero out the resultant
   int nnp = geom_.nnp;

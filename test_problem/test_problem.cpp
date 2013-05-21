@@ -16,13 +16,13 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 21;
+	int nnp = 41;
 	LECSM csm(nnp);
 
 	// Define material properties
-	double E = 100000000; // Young's Modulus (Rubber) (Pa)
-	double t = 0.03;				  // Thickness of the beam elements (meters)
-	double w = 1;					// Width of the beam elements (meters)
+	double E = 69000000000; // Young's Modulus (Rubber) (Pa)
+	double t = 0.1;				  // Thickness of the beam elements (meters)
+	double w = 1;					  // Width of the beam elements (meters)
 	double h = 1;						// Maximum nozzle height (meters)
 	csm.set_material(E, t, w, h);
 
@@ -43,7 +43,7 @@ int main() {
 // BOUNDARY CONDITIONS
 // =====================================================================
 
-#if 0
+#if 1
   // ~~~~~ CANTILEVER BEAM ~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
   InnerProdVector BCtype(3*nnp, 0.0);
@@ -60,7 +60,7 @@ int main() {
   BCtype(1) = 0;
   BCtype(2) = 0;
   BCtype(3*nnp-2) = 1;
-  BCval(3*nnp-2) = 1000;
+  BCval(3*nnp-2) = -1000;
 #else
   // ~~~~~ PARABOLIC NOZZLE ~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -92,7 +92,7 @@ int main() {
 // VALIDATING THE PARTIAL DERIVATIVES
 // =====================================================================
 
-#if 1
+#if 0
   // csm.InspectMesh();
 
   InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0);

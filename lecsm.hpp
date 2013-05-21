@@ -155,7 +155,7 @@ public:
    * \param[in] wrk - [(dR/dA)^T]*u_csm vector
    * \param[out] v_csm - CSM right-hand-side vector
    */
-   void Calc_dAdu_TransProduct(InnerProdVector& wrk, InnerProdVector& v_csm);
+   void CalcTrans_dAdu_Product(InnerProdVector& wrk, InnerProdVector& v_csm);
 
 	/*!
    * \brief calculates the (dS/dp)*(dp/dq)*u_csm product
@@ -169,7 +169,7 @@ public:
    * \param[in] u_cfd - CFD solution vector
    * \param[out] wrk - product vector
    */
-   void Calc_dSdp_TransProduct(InnerProdVector& u_cfd, InnerProdVector& wrk);
+   void CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk);
 
 	/*!
    * \brief calculates the nozzle area and stores in area_
