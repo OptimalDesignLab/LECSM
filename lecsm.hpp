@@ -92,6 +92,16 @@ public:
    */
 	void GenerateMesh(const InnerProdVector & x, const InnerProdVector & y);
 
+   /*!
+   * \brief resets the solver coordinates to the nodal coordinates of the geometry
+   */
+   void ResetCoords();
+
+   /*!
+   * \brief updates the geometry with the coordinates stored in the solver
+   */
+   void UpdateMesh();
+
 	/*!
    * \brief set the nodal boundary conditions (displacements and forcing)
    * \param[in] BCtype - type of BC (displacement or forcing)

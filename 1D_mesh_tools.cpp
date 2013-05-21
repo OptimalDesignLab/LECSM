@@ -311,15 +311,15 @@ void Mesh::SetupEq(vector< vector< vector<int> > >& gm)
 
 // =====================================================================
 
-void Mesh::Update(const InnerProdVector& u_csm)
+void Mesh::Update(const InnerProdVector & xCoords, const InnerProdVector & yCoords)
 {
-  // Loop over mesh nodes and perturb their coordinates
+  // Loop over mesh nodes and update their coordinates
   // in the appropriate direction only if it's not fixed
   for (int i=0; i<nnp; i++) {
-    for (int k=0; k<2; k++) {
-      if (allNodes[i].type[k] == 1)
-        allNodes[i].coords[k] += u_csm(3*i+k);
-    }
+    if (allNodes[i].type[0] == 1)
+      allNodes[i].coords[0] = xCoords(i);
+    if (allNodes[i].type[1] == 1)
+      allNodes[i].coords[1] = yCoords(i);
   }
 
   // Cascade the changes into the elements

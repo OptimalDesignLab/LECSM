@@ -9,7 +9,6 @@
 #include <math.h>
 #include "./lecsm.hpp"
 #include "./matrix_tools.hpp"
-#include "./output_tools.hpp"
 
 using namespace std;
 
@@ -60,6 +59,29 @@ void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
   // Clean-up
   nodes.clear();
   elems.clear();
+}
+
+// =====================================================================
+
+void LECSM::ResetCoords()
+{
+  int nnp = geom_.nnp;
+  for (int i=0; i<nnp; i++) {
+    Node node = geom_.allNodes[i];
+    xCoords_(i) = node.coords[0];
+    yCoords_(i) = node.coords[1];
+  }
+}
+
+// =====================================================================
+
+void LECSM::UpdateMesh()
+{
+  int nnp = geom_.nnp;
+  for (int i=0; i<nnp; i++) {
+    geom_.allNodes[i].coords[0] = xCoords_(i);
+    geom_.allNodes[i].coords[1] = yCoords_(i);
+  }
 }
 
 // =====================================================================
