@@ -39,11 +39,17 @@ public:
    */
 	~LECSM() {}
 
-	/*!
+  /*!
    * \brief returns a vector x coordinates for each node
    * \returns xCoords_ member value
    */
-	InnerProdVector & get_x() { return xCoords_; }
+  InnerProdVector & get_x() { return xCoords_; }
+  
+  /*!
+   * \brief returns a vector y coordinates for each node
+   * \returns yCoords_ member value
+   */
+  InnerProdVector & get_y() { return yCoords_; }
 
 	/*!
    * \brief returns a vector areas at each node
