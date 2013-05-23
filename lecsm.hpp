@@ -171,10 +171,10 @@ public:
    */
    void CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk);
 
-	/*!
-   * \brief calculates the nozzle area and stores in area_
+  /*!
+   * \brief calculates the displaced coordinates and nozzle area
    */
-	void CalcArea();
+	void CalcCoordsAndArea();
 
 	/*!
    * \brief calculates the CSM residual based on displacements in u_

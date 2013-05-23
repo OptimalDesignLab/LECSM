@@ -15,13 +15,6 @@ using namespace std;
 void LECSM::set_u(const InnerProdVector & u_csm)
 { 
   u_ = u_csm;
-  for (int i=0; i<nnp_; i++) {
-    Node node = geom_.allNodes[i];
-    if (node.type[0] == 1)
-      xCoords_(i) += u_csm(3*i);
-    if (node.type[1] == 1)
-      yCoords_(i) += u_csm(3*i+1);
-  }
 }
 
 // =====================================================================
@@ -469,14 +462,18 @@ void LECSM::CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk)
 }
 // =====================================================================
 
-void LECSM::CalcArea()
+void LECSM::CalcCoordsAndArea()
 {
   int nnp = geom_.nnp;
-  double y, meshH;
-  for (int i=0; i<nnp; i++) {
-    y = yCoords_(i);
-    meshH = 2*(0.5*h_ - y);
-    area_(i) = w_*meshH;
+  for (int i=0; i<nnp_; i++) {
+    Node node = geom_.allNodes[i];
+    xCoords_(i) = node.coords[0];
+    if (node.type[0] == 1)
+      xCoords_(i) += u_(3*i);
+    yCoords_(i) = node.coords[1];
+    if (node.type[1] == 1)
+      yCoords_(i) += u_(3*i+1);
+    area_(i) = w_*(h_ - 2.0*yCoords_(i));
   }
 }
 

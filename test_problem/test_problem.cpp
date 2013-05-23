@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 41;
+	int nnp = 11;
 	LECSM csm(nnp);
 
 	// Define material properties
@@ -43,7 +43,7 @@ int main() {
 // BOUNDARY CONDITIONS
 // =====================================================================
 
-#if 1
+#if 0
   // ~~~~~ CANTILEVER BEAM ~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
   InnerProdVector BCtype(3*nnp, 0.0);
