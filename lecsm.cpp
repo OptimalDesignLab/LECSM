@@ -606,7 +606,7 @@ void LECSM::SolveFor(InnerProdVector & rhs)
   vector<double> disp(ndof);
   int maxIt = 100;
   int iter = CGSolve(K, ndof, ndof, F_new, ndof, maxIt, disp);
-  printf("LECSM: Solver converged in %i iterations!\n");
+  printf("LECSM: Solver converged in %i iterations!\n", iter);
 
   // Assemble the nodal displacements
   for (int A = 0; A < nnp; A++)
@@ -672,7 +672,7 @@ void LECSM::Solve()
   vector<double> disp(ndof);
   int maxIt = 100;
   int iter = CGSolve(K, ndof, ndof, F, ndof, maxIt, disp);
-  printf("LECSM: Solver converged in %i iterations!\n");
+  printf("LECSM: Solver converged in %i iterations!\n", iter);
 
   // Assemble the nodal displacements
   printf("Directions:\n");
