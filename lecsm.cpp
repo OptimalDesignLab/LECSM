@@ -488,6 +488,7 @@ void LECSM::CalcTrans_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
 
   // Calculate [(dS/du)^T]*u_csm
   for (int i=0; i<nnp; i++) {
+    out(i) = 0.0;
     for (int k=0; k<3*nnp; k++) {
       out(i) += dSdp[k][i] * in(k); // perform the multiplication
     }
