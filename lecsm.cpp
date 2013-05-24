@@ -362,6 +362,19 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
     idR = nodeR.id;
     vector< vector<double> > dSdp_elem(6, vector<double>(2));
 
+#if 0
+  double q1 = -P[0]*w;
+  double q2 = -P[1]*w;
+  double f1 = (length/6)*((2*q1)+q2);
+  double f2 = (length/6)*(q1+(2*q2));
+  FE[0] = (-sine*f1) + nodeL.forceBC[0];
+  FE[1] = (cosine*f1) + nodeL.forceBC[1];
+  FE[2] = nodeL.forceBC[2];
+  FE[3] = (-sine*f2) + nodeR.forceBC[0];
+  FE[4] = (cosine*f2) + nodeR.forceBC[1];
+  FE[5] = nodeR.forceBC[2];
+#endif
+  
     // Calculate element length and orientation
     x1 = nodeL.coords[0];
     x2 = nodeR.coords[0];
@@ -373,26 +386,27 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
 
     // Calculate the element node contribution
     dSdp_elem[0][0] = len*w_*s/3;
-    dSdp_elem[1][0] = len*w_*c/3;
+    dSdp_elem[1][0] = -len*w_*c/3;
     dSdp_elem[2][0] = 0; // Moment term (pressure independent)
     dSdp_elem[3][0] = len*w_*s/6;
-    dSdp_elem[4][0] = len*w_*c/6;
+    dSdp_elem[4][0] = -len*w_*c/6;
     dSdp_elem[5][0] = 0;
     dSdp_elem[0][1] = len*w_*s/6;
-    dSdp_elem[1][1] = len*w_*c/6;
+    dSdp_elem[1][1] = -len*w_*c/6;
     dSdp_elem[2][1] = 0; // Moment term (pressure independent)
     dSdp_elem[3][1] = len*w_*s/3;
-    dSdp_elem[4][1] = len*w_*c/3;
+    dSdp_elem[4][1] = -len*w_*c/3;
     dSdp_elem[5][1] = 0;
 
+    // subtract element terms, because -f is on the left side
     for (int k=0; k<3; k++) {
       if (nodeL.type[k] == 1) {
-        dSdp[3*idL+k][idE] += dSdp_elem[k][0];
-        dSdp[3*idL+k][idE+1] += dSdp_elem[k][1];
+        dSdp[3*idL+k][idE] -= dSdp_elem[k][0];
+        dSdp[3*idL+k][idE+1] -= dSdp_elem[k][1];
       }
       if (nodeR.type[k] == 1) {
-        dSdp[3*idR+k][idE] += dSdp_elem[3+k][0];
-        dSdp[3*idR+k][idE+1] += dSdp_elem[3+k][1];
+        dSdp[3*idR+k][idE] -= dSdp_elem[3+k][0];
+        dSdp[3*idR+k][idE+1] -= dSdp_elem[3+k][1];
       }
     }
 

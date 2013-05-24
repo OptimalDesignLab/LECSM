@@ -105,7 +105,7 @@ int main() {
   InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0);
   InnerProdVector outU(nnp,0.0), outP(3*nnp,0.0);
   InnerProdVector vU(nnp,0.0), vP(3*nnp,0.0);
-  double delta = 1.e-6;
+  double delta = 1.e-3;
 
   // Perform (dS/dp) product with the built-in routine
   csm.Calc_dSdp_Product(wrkP, vP);
@@ -145,7 +145,8 @@ int main() {
     diffP(i) = vP(i) - outP(i);
     // printf("%i th difference: %f\n", i, diffP(i));
   }
-  printf("L2 norm of the dS/dp product difference: %E\n", diffP.Norm2());
+  printf("normalized L2 norm of the dS/dp product difference: %E\n",
+         diffP.Norm2()/vP.Norm2());
 
   // Perform (dA/du) product with the built-in routine
   csm.Calc_dAdu_Product(wrkU, vU);
