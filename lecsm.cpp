@@ -475,12 +475,12 @@ void LECSM::CalcTrans_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
 
     for (int k=0; k<3; k++) {
       if (nodeL.type[k] == 1) {
-        dSdp[3*idL+k][idL] += dSdp_elem[k][0];
-        dSdp[3*idL+k][idR] += dSdp_elem[k][1];
+        dSdp[3*idL+k][idL] -= dSdp_elem[k][0];
+        dSdp[3*idL+k][idR] -= dSdp_elem[k][1];
       }
       if (nodeR.type[k] == 1) {
-        dSdp[3*idR+k][idL] += dSdp_elem[3+k][0];
-        dSdp[3*idR+k][idR] += dSdp_elem[3+k][1];
+        dSdp[3*idR+k][idL] -= dSdp_elem[3+k][0];
+        dSdp[3*idR+k][idR] -= dSdp_elem[3+k][1];
       }
     }
     dSdp_elem.clear();

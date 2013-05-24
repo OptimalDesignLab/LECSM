@@ -102,13 +102,19 @@ int main() {
 #if 1
   //csm.InspectMesh();
 
-  InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0);
+  InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0), wrkQ(3*nnp,1.0);
   InnerProdVector outU(nnp,0.0), outP(3*nnp,0.0);
-  InnerProdVector vU(nnp,0.0), vP(3*nnp,0.0);
+  InnerProdVector vU(nnp,0.0), vP(3*nnp,0.0), vQ(nnp,0.0), vR(3*nnp,0.0);
   double delta = 1.e-3;
 
   // Perform (dS/dp) product with the built-in routine
   csm.Calc_dSdp_Product(wrkP, vP);
+  csm.CalcTrans_dSdp_Product(wrkQ, vQ);
+  double wrkQ_dSdp_wrkP = InnerProd(vP, wrkQ);
+  double wrkP_TransdSdp_wrkQ = InnerProd(vQ, wrkP);
+
+  cout << "difference between wrkQ_dSdp_wrkP and wrkP_TransdSdp_wrkQ = "
+       << wrkQ_dSdp_wrkP - wrkP_TransdSdp_wrkQ << endl;
   
   // Calculate (dS/dp) with finite differencing
   csm.CalcResidual();
@@ -150,6 +156,12 @@ int main() {
 
   // Perform (dA/du) product with the built-in routine
   csm.Calc_dAdu_Product(wrkU, vU);
+  csm.CalcTrans_dAdu_Product(wrkP, vR);
+  double V_dAdu_U = InnerProd(vU, wrkP);
+  double U_TransdSdp_V = InnerProd(vR, wrkU);
+
+  cout << "difference between V_dAdu_U and U_TransdSdp_V = "
+       << V_dAdu_U - U_TransdSdp_V  << endl;
 
   // Calculate (dA/du) with finite differencing
   csm.CalcCoordsAndArea();
