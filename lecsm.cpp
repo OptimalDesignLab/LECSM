@@ -285,7 +285,6 @@ void LECSM::CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     dAdu[i][3*i] = 0;
-    out(i) = 0;
     if (node.type[1] == 1)
       dAdu[i][3*i+1] = -2*w_;
     else
@@ -294,6 +293,7 @@ void LECSM::CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
   }
 
   for (int i=0; i<3*nnp; i++) {
+    out(i) = 0;
     for (int j=0; j<nnp; j++) {
       out(i) += dAdu[j][i] * in(j);
     }
