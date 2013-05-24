@@ -103,8 +103,7 @@ void LECSM::SetBoundaryConds(const InnerProdVector & BCtype,
 
 // =====================================================================
 
-void LECSM::InitGlobalVecs(vector<double>& G, vector<double>& F,
-                           vector< vector<double> >& K)
+void LECSM::InitGlobalVecs(vector<double>& G, vector<double>& F)
 {
   Node nd;
   int nnp = geom_.nnp;
@@ -125,12 +124,6 @@ void LECSM::InitGlobalVecs(vector<double>& G, vector<double>& F,
         }
       }
     }
-  }
-  int ndof = geom_.ndof;
-  for (int a = 0; a < ndof; a++)
-  {
-    for (int b = 0; b < ndof; b++)
-      {K[a][b]=0;}
   }
 }
 
@@ -179,8 +172,8 @@ void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
   int ndof = geom_.ndof;
   int ndog = geom_.ndog;
   vector<double> G(ndog), F(ndof);
-  vector< vector<double> > K(ndof, vector<double>(ndof));
-  InitGlobalVecs(G, F, K);
+  vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
+  InitGlobalVecs(G, F);
   GetStiff(gm, G, F, K);
   G.clear();
   F.clear();
@@ -202,7 +195,7 @@ void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
 
 // =====================================================================
 
-void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
+void LECSM::Calc_dSdu_Product(InnerProdVector& in, InnerProdVector& out)
 {
   // Map out the global equation numbers
   int nnp = geom_.nnp;
@@ -213,8 +206,8 @@ void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
   int ndof = geom_.ndof;
   int ndog = geom_.ndog;
   vector<double> G(ndog), F(ndof);
-  vector< vector<double> > K(ndof, vector<double>(ndof));
-  InitGlobalVecs(G, F, K);
+  vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
+  InitGlobalVecs(G, F);
   GetStiff(gm, G, F, K);
   G.clear();
   F.clear();
@@ -225,7 +218,7 @@ void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3; j++) {
       if (gm[j][i][0] == 1) {
-        u_dof[p] = u_csm(i*3+j);
+        u_dof[p] = in(i*3+j);
         p++;
       }
     }
@@ -243,10 +236,10 @@ void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
       a = (i*3)+j;
       if (gm[j][i][0] == 1) {  // node dof is free
         b = gm[j][i][1];
-        v_csm(a) = v_dof[b];
+        out(a) = v_dof[b];
       }
       else
-        v_csm(a) = 0;
+        out(a) = 0;
     }
   }
 
@@ -259,14 +252,14 @@ void LECSM::Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm)
 
 // =====================================================================
 
-void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
+void LECSM::Calc_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
 {
   int nnp = geom_.nnp;
-  vector< vector<double> > dAdu(nnp, vector<double>(3*nnp));
+  vector< vector<double> > dAdu(nnp, vector<double>(3*nnp, 0.0));
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     dAdu[i][3*i] = 0;
-    wrk(i) = 0;
+    out(i) = 0;
     if (node.type[1] == 1)
       dAdu[i][3*i+1] = -2*w_;
     else
@@ -276,7 +269,7 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
 
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3*nnp; j++) {
-      wrk(i) += dAdu[i][j] * u_csm(j);
+      out(i) += dAdu[i][j] * in(j);
     }
   }
 
@@ -285,14 +278,14 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk)
 
 // =====================================================================
 
-void LECSM::CalcTrans_dAdu_Product(InnerProdVector& wrk, InnerProdVector& v_csm)
+void LECSM::CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
 {
   int nnp = geom_.nnp;
-  vector< vector<double> > dAdu(nnp, vector<double>(3*nnp));
+  vector< vector<double> > dAdu(nnp, vector<double>(3*nnp, 0.0));
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     dAdu[i][3*i] = 0;
-    v_csm(i) = 0;
+    out(i) = 0;
     if (node.type[1] == 1)
       dAdu[i][3*i+1] = -2*w_;
     else
@@ -302,7 +295,7 @@ void LECSM::CalcTrans_dAdu_Product(InnerProdVector& wrk, InnerProdVector& v_csm)
 
   for (int i=0; i<3*nnp; i++) {
     for (int j=0; j<nnp; j++) {
-      v_csm(i) += dAdu[j][i] * wrk(j);
+      out(i) += dAdu[j][i] * in(j);
     }
   }
 
@@ -311,17 +304,46 @@ void LECSM::CalcTrans_dAdu_Product(InnerProdVector& wrk, InnerProdVector& v_csm)
 
 // =====================================================================
 
-void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
+void LECSM::Calc_dudA_Product(InnerProdVector& in, InnerProdVector& out)
+{
+  int nnp = geom_.nnp;
+  vector< vector<double> > dudA(3*nnp, vector<double>(nnp, 0.0));
+  for (int i=0; i<nnp; i++) {
+    Node node = geom_.allNodes[i];
+    if (node.type[1] == 1)
+      dudA[3*i+1][i] = -1/(2*w_);
+  }
+  for (int i=0; i<3*nnp; i++) {
+    for (int j=0; j<nnp; j++)
+      out(i) += dudA[i][j] * in(j);
+  }
+  dudA.clear();
+}
+
+// =====================================================================
+
+void LECSM::CalcTrans_dudA_Product(InnerProdVector& in, InnerProdVector& out)
+{
+  int nnp = geom_.nnp;
+  vector< vector<double> > dudA(3*nnp, vector<double>(nnp, 0.0));
+  for (int i=0; i<nnp; i++) {
+    Node node = geom_.allNodes[i];
+    if (node.type[1] == 1)
+      dudA[3*i+1][i] = -1/(2*w_);
+  }
+  for (int i=0; i<nnp; i++) {
+    for (int j=0; j<3*nnp; j++)
+      out(i) += dudA[j][i] * in(j);
+  }
+  dudA.clear();
+}
+// =====================================================================
+
+void LECSM::Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
 {
   // Initialize the global derivative matrix and zero out the resultant
   int nnp = geom_.nnp;
-  vector< vector<double> > dSdp(nnp*3, vector<double>(nnp));
-  for (int i=0; i<nnp*3; i++) {
-    u_cfd(i) = 0;
-    for (int j=0; j<nnp; j++) {
-      dSdp[i][j] = 0;
-    }
-  }
+  vector< vector<double> > dSdp(nnp*3, vector<double>(nnp, 0.0));
 
   // Loop over elements, calculating dS/dp at the element level before
   // adding the contributions into u_cfd
@@ -350,14 +372,18 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
     s = (y2 - y1)/len;
 
     // Calculate the element node contribution
-    dFxdp = -w_*len*s/4;
-    dFydp = w_*len*c/4;
-    dSdp_elem[0][0] = dFxdp;
-    dSdp_elem[1][0] = dFydp;
+    dSdp_elem[0][0] = len*w_*s/3;
+    dSdp_elem[1][0] = len*w_*c/3;
     dSdp_elem[2][0] = 0; // Moment term (pressure independent)
-    dSdp_elem[0][1] = dFxdp;
-    dSdp_elem[1][1] = dFydp;
+    dSdp_elem[3][0] = len*w_*s/6;
+    dSdp_elem[4][0] = len*w_*c/6;
+    dSdp_elem[5][0] = 0;
+    dSdp_elem[0][1] = len*w_*s/6;
+    dSdp_elem[1][1] = len*w_*c/6;
     dSdp_elem[2][1] = 0; // Moment term (pressure independent)
+    dSdp_elem[3][1] = len*w_*s/3;
+    dSdp_elem[4][1] = len*w_*c/3;
+    dSdp_elem[5][1] = 0;
 
     for (int k=0; k<3; k++) {
       if (nodeL.type[k] == 1) {
@@ -365,8 +391,8 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
         dSdp[3*idL+k][idE+1] += dSdp_elem[k][1];
       }
       if (nodeR.type[k] == 1) {
-        dSdp[3*idR+k][idE] += dSdp_elem[k][0];
-        dSdp[3*idR+k][idE+1] += dSdp_elem[k][1];
+        dSdp[3*idR+k][idE] += dSdp_elem[3+k][0];
+        dSdp[3*idR+k][idE+1] += dSdp_elem[3+k][1];
       }
     }
 
@@ -375,12 +401,10 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 
   // Calculate (dS/du)*wrk
   for (int i=0; i<nnp*3; i++) {
-    // printf("|");
+    out(i) = 0;
     for (int k=0; k<nnp; k++) {
-      u_cfd(i) += dSdp[i][k] * wrk(k); // perform the multiplication
-      // printf(" %f ", dSdp[i][k]);
+      out(i) += dSdp[i][k] * in(k); // perform the multiplication
     }
-    // printf("|\n");
   }
 
   // Clean-up
@@ -389,17 +413,11 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_cfd)
 
 // =====================================================================
 
-void LECSM::CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk)
+void LECSM::CalcTrans_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
 {
   // Initialize the global derivative matrix and zero out the resultant
   int nnp = geom_.nnp;
-  vector< vector<double> > dSdp(nnp*3, vector<double>(nnp));
-  for (int i=0; i<nnp; i++) {
-    wrk(i) = 0;
-    for (int j=0; j<3*nnp; j++) {
-      dSdp[j][i] = 0;
-    }
-  }
+  vector< vector<double> > dSdp(nnp*3, vector<double>(nnp, 0.0));
 
   // Loop over elements, calculating dS/dp at the element level before
   // adding the contributions into u_cfd
@@ -428,23 +446,27 @@ void LECSM::CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk)
     s = (y2 - y1)/len;
 
     // Calculate the element node contribution
-    dFxdp = -w_*len*s/4;
-    dFydp = w_*len*c/4;
-    dSdp_elem[0][0] = dFxdp;
-    dSdp_elem[1][0] = dFydp;
+    dSdp_elem[0][0] = len*w_*s/3;     // dF1x/dP1
+    dSdp_elem[1][0] = -len*w_*c/3;    // dF1y/dP1
     dSdp_elem[2][0] = 0; // Moment term (pressure independent)
-    dSdp_elem[0][1] = dFxdp;
-    dSdp_elem[1][1] = dFydp;
+    dSdp_elem[3][0] = len*w_*s/6;     //
+    dSdp_elem[4][0] = -len*w_*c/6;
+    dSdp_elem[5][0] = 0; // Moment term (pressure independent)
+    dSdp_elem[0][1] = len*w_*s/6;
+    dSdp_elem[1][1] = -len*w_*c/6;
     dSdp_elem[2][1] = 0; // Moment term (pressure independent)
+    dSdp_elem[3][1] = len*w_*s/3;
+    dSdp_elem[4][1] = -len*w_*c/3;
+    dSdp_elem[5][1] = 0; // Moment term (pressure independent)
 
     for (int k=0; k<3; k++) {
       if (nodeL.type[k] == 1) {
-        dSdp[3*idL+k][idE] += dSdp_elem[k][0];
-        dSdp[3*idL+k][idE+1] += dSdp_elem[k][1];
+        dSdp[3*idL+k][idL] += dSdp_elem[k][0];
+        dSdp[3*idL+k][idR] += dSdp_elem[k][1];
       }
       if (nodeR.type[k] == 1) {
-        dSdp[3*idR+k][idE] += dSdp_elem[k][0];
-        dSdp[3*idR+k][idE+1] += dSdp_elem[k][1];
+        dSdp[3*idR+k][idL] += dSdp_elem[3+k][0];
+        dSdp[3*idR+k][idR] += dSdp_elem[3+k][1];
       }
     }
     dSdp_elem.clear();
@@ -453,7 +475,7 @@ void LECSM::CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk)
   // Calculate [(dS/du)^T]*u_csm
   for (int i=0; i<nnp; i++) {
     for (int k=0; k<3*nnp; k++) {
-      wrk(i) += dSdp[k][i] * u_cfd(k); // perform the multiplication
+      out(i) += dSdp[k][i] * in(k); // perform the multiplication
     }
   }
 
@@ -490,8 +512,8 @@ void LECSM::CalcResidual()
   int ndof = geom_.ndof;
   int ndog = geom_.ndog;
   vector<double> G(ndog), F(ndof);
-  vector< vector<double> > K(ndof, vector<double>(ndof));
-  InitGlobalVecs(G, F, K);
+  vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
+  InitGlobalVecs(G, F);
 
   // Calculate the stiffness matrix and the forcing vector
   GetStiff(gm, G, F, K);
@@ -537,7 +559,7 @@ void LECSM::CalcResidual()
 
 void LECSM::Solve()
 {
-#if 1
+#if 0
   geom_.InspectElements();
 #endif
 
@@ -545,7 +567,7 @@ void LECSM::Solve()
   int nnp = geom_.nnp;
   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
   geom_.SetupEq(gm);
-#if 1
+#if 0
   printf("Printing global mapping for inspection:\n");
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3; j++) {
@@ -559,12 +581,12 @@ void LECSM::Solve()
   int ndof = geom_.ndof;
   int ndog = geom_.ndog;
   vector<double> G(ndog), F(ndof);
-  vector< vector<double> > K(ndof, vector<double>(ndof));
-  InitGlobalVecs(G, F, K);
+  vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
+  InitGlobalVecs(G, F);
 
   // Calculate the stiffness matrix and the forcing vector
   GetStiff(gm, G, F, K);
-#if 1
+#if 0
   printf("Printing the stiffness matrix for inspection:\n");
   printMatrix(K, ndof, ndof);
   printf("Printing the forcing vector for inspection:\n");

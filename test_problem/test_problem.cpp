@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 11;
+	int nnp = 51;
 	LECSM csm(nnp);
 
 	// Define material properties
@@ -85,15 +85,22 @@ int main() {
 
   // ~~~~~ NODAL PRESSURES ~~~~~
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#if 0
   InnerProdVector press(nnp, 50.0);
+#else
+  InnerProdVector press(nnp, 0.0);
+  double maxP = 10000000;
+  for (int i=0; i<nnp; i++)
+    press(i) = (maxP*(x_coord(i)-length)*x_coord(i)/25)+maxP;
+#endif
   csm.set_press(press);
 
 // =====================================================================
 // VALIDATING THE PARTIAL DERIVATIVES
 // =====================================================================
 
-#if 0
-  // csm.InspectMesh();
+#if 1
+  //csm.InspectMesh();
 
   InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0);
   InnerProdVector outU(nnp,0.0), outP(3*nnp,0.0);
@@ -122,24 +129,29 @@ int main() {
 
   // Multiply (dS/dP)*wrkP
   for (int i=0; i<3*nnp; i++) {
+    //printf("|");
     for (int j=0; j<nnp; j++) {
       outP(i) += dSdp[i][j] * wrkP(j);
+      //printf(" %f ", dSdp[i][j]);
     }
+    //printf("|\n");
   }
 
   // Validate by seeing if the difference is zero
-  printf("(dS/dp) product:\n");
-  printf("---------------------\n");
+  // printf("(dS/dp) product:\n");
+  // printf("---------------------\n");
+  InnerProdVector diffP(3*nnp, 0.0);
   for (int i=0; i<3*nnp; i++) {
-    double diff = vP(i) - outP(i);
-    printf("%i th difference: %f\n", i, diff);
+    diffP(i) = vP(i) - outP(i);
+    // printf("%i th difference: %f\n", i, diffP(i));
   }
+  printf("L2 norm of the dS/dp product difference: %E\n", diffP.Norm2());
 
   // Perform (dA/du) product with the built-in routine
   csm.Calc_dAdu_Product(wrkU, vU);
 
   // Calculate (dA/du) with finite differencing
-  csm.CalcArea();
+  csm.CalcCoordsAndArea();
   InnerProdVector area1 = csm.get_area();
   vector< vector<double> > dAdu(nnp, vector<double>(3*nnp));
   InnerProdVector u(3*nnp, 0.0);
@@ -147,14 +159,12 @@ int main() {
     // perturb displacement in the i-th degree of freedom
     u(i) += delta;
     csm.set_u(u);
-    csm.CalcArea();
+    csm.CalcCoordsAndArea();
     InnerProdVector area2 = csm.get_area();
     for (int j=0; j<nnp; j++) {
       dAdu[j][i] = (area2(j) - area1(j))/delta;
     }
     // undo the displacement before testing the next degree of freedom
-    u(i) -= 2*delta;
-    csm.set_u(u);
     u(i) = 0;
   }
 
@@ -166,15 +176,18 @@ int main() {
   }
 
   // Validate by seeing if the difference is zero
-  printf("(dA/du) product:\n");
-  printf("---------------------\n");
+  // printf("(dA/du) product:\n");
+  // printf("---------------------\n");
+  InnerProdVector diffU(nnp, 0.0);
   for (int i=0; i<nnp; i++) {
-    double diff = vU(i) - outU(i);
-    printf("%i th difference: %f\n", i, diff);
+    diffU(i) = vU(i) - outU(i);
+    // printf("%i th difference: %f\n", i, diffU(i));
   }
+  printf("L2 norm of the dA/du product difference: %E\n", diffU.Norm2());
 #else
   // Call FEA solver
   csm.Solve();
+  InnerProdVector u = csm.get_u();
 #endif
 
 // =====================================================================
@@ -189,6 +202,59 @@ int main() {
   for(int i=0; i<3*nnp; i++) {
     printf("|  %f  |\n", res(i));
   }
+#endif
+
+// =====================================================================
+// GRID REFINEMENT TEST
+// =====================================================================
+
+#if 0
+  // Declare the solver
+  int nnp_fine = 41;
+  LECSM csm_fine(nnp_fine);
+
+  csm_fine.set_material(E, t, w, h);
+
+  // Create problem mesh
+  InnerProdVector x_fine(nnp, 0.0);
+  InnerProdVector y_fine(nnp, 0.0);
+  for (int i = 0; i < nnp_fine; i++) {
+    // evenly spaced nodes along the x
+    x_fine(i) = i*length/(nnp_fine-1);
+    // parabolic nozzle wall for y coords
+    y_fine(i) = 0.1*(length-x_fine(i))*x_fine(i);
+  }
+  csm_fine.GenerateMesh(x_fine, y_fine);
+
+  InnerProdVector BCtype_fine(3*nnp_fine, 0.0);
+  InnerProdVector BCval_fine(3*nnp_fine, 0.0);
+  for (int i=0; i<nnp_fine; i++) {
+    BCtype_fine(3*i) = 0;
+    BCtype_fine(3*i+1) = -1;
+    BCtype_fine(3*i+2) = -1;
+    BCval_fine(3*i) = 0;
+    BCval_fine(3*i+1) = 0;
+    BCval_fine(3*i+2) = 0;
+  }
+  BCtype_fine(0) = 0;
+  BCtype_fine(1) = 0;
+  BCtype_fine(2) = 0;
+  BCtype_fine(3*nnp_fine-3) = 0;
+  BCtype_fine(3*nnp_fine-2) = 0;
+  BCtype_fine(3*nnp_fine-1) = 0;
+  csm_fine.SetBoundaryConds(BCtype_fine, BCval_fine);
+
+  InnerProdVector press_fine(nnp_fine, 0.0);
+  for (int i=0; i<nnp; i++)
+    press_fine(i) = (maxP*(x_fine(i)-length)*x_fine(i)/25)+maxP;
+  csm_fine.set_press(press_fine);
+
+  csm_fine.Solve();
+  InnerProdVector u_fine = csm_fine.get_u();
+  double error = u_fine.Norm2() - u.Norm2();
+  printf("Coarse grid deformation L2 norm: %E\n", u.Norm2());
+  printf("Fine grid deformation L2 norm: %E\n", u_fine.Norm2());
+  printf("Grid size error: %E\n", error);
 #endif
 
 	return 0;

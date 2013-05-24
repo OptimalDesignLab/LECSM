@@ -142,18 +142,15 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
 
   // Create the element forcing vector due to pressure
   // Add in the nodal force contributions
-  double p1 = P[0];
-  double p2 = P[1];
-  double Pave = 0.5*(p1+p2);
-  double area = length*w;
-  double f_hat = -Pave*area/2;
-  double fy = f_hat*cosine;
-  double fx = f_hat*sine;
-  FE[0] = fx + nodeL.forceBC[0];
-  FE[1] = fy + nodeL.forceBC[1];
+  double q1 = -P[0]*w;
+  double q2 = -P[1]*w;
+  double f1 = (length/6)*((2*q1)+q2);
+  double f2 = (length/6)*(q1+(2*q2));
+  FE[0] = (-sine*f1) + nodeL.forceBC[0];
+  FE[1] = (cosine*f1) + nodeL.forceBC[1];
   FE[2] = nodeL.forceBC[2];
-  FE[3] = fx + nodeR.forceBC[0];
-  FE[4] = fy + nodeR.forceBC[1];
+  FE[3] = (-sine*f2) + nodeR.forceBC[0];
+  FE[4] = (cosine*f2) + nodeR.forceBC[1];
   FE[5] = nodeR.forceBC[2];
 
 #if 0

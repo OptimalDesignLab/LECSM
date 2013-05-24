@@ -119,10 +119,8 @@ public:
    * \brief initializes the global vectors used in the solver
    * \param[out] G - global prescribed displacements vector
    * \param[out] F - global prescribed nodal forcing
-   * \param[out] K - global stiffness matrix
    */
-	void InitGlobalVecs(vector<double>& G, vector<double>& F,
-											vector< vector<double> >& K);
+	void InitGlobalVecs(vector<double>& G, vector<double>& F);
 
 	/*!
    * \brief calculates the global stiffness matrix and associated vectors
@@ -143,39 +141,53 @@ public:
   void Precondition(InnerProdVector& in, InnerProdVector& out);
 
 	/*!
-   * \brief calculates the (dS/du)*u_csm product
-   * \param[in] u_csm - displacement vector
-   * \param[out] v_csm - product vector
+   * \brief calculates the (dS/du)*vector product
+   * \param[in] in - multiplied vector (3*num_nodes)
+   * \param[out] out - resultant vector (3*num_nodes)
    */
-	void Calc_dSdu_Product(InnerProdVector& u_csm, InnerProdVector& v_csm);
+	void Calc_dSdu_Product(InnerProdVector& in, InnerProdVector& out);
 
 	/*!
-   * \brief calculates the (dA/du)*u_csm product
-   * \param[in] u_csm - displacement vector
-   * \param[out] v_csm - product vector
+   * \brief calculates the (dA/du)*vector product
+   * \param[in] in - multiplied vector (3*num_nodes)
+   * \param[out] out - resultant vector (num_nodes)
    */
-	void Calc_dAdu_Product(InnerProdVector& u_csm, InnerProdVector& wrk);
+	void Calc_dAdu_Product(InnerProdVector& in, InnerProdVector& out);
 
    /*!
-   * \brief calculates the [(dA/du)^T]*[(dR/dA)^T]*u_csm product
-   * \param[in] wrk - [(dR/dA)^T]*u_csm vector
-   * \param[out] v_csm - CSM right-hand-side vector
+   * \brief calculates the [(dA/du)^T]*vector product
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (3*num_nodes)
    */
-   void CalcTrans_dAdu_Product(InnerProdVector& wrk, InnerProdVector& v_csm);
+   void CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out);
+
+   /*!
+   * \brief calculates the (du/dA)*vector product
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (3*num_nodes)
+   */
+   void Calc_dudA_Product(InnerProdVector& in, InnerProdVector& out);
+
+   /*!
+   * \brief calculates the [(du/dA)^T]*vector product
+   * \param[in] in - multiplied vector (3*num_nodes)
+   * \param[out] out - resultant vector (num_nodes)
+   */
+   void CalcTrans_dudA_Product(InnerProdVector& in, InnerProdVector& out);
 
 	/*!
-   * \brief calculates the (dS/dp)*(dp/dq)*u_csm product
-   * \param[in] wrk - (dp/dq)*u_cfd vector
-   * \param[out] v_csm - product vector
+   * \brief calculates the (dS/dp)*vector product
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (3*num_nodes)
    */
-	void Calc_dSdp_Product(InnerProdVector& wrk, InnerProdVector& u_csm);
+	void Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out);
 
    /*!
-   * \brief calculates the [(dS/dp)^T]*u_cfd product
-   * \param[in] u_cfd - CFD solution vector
-   * \param[out] wrk - product vector
+   * \brief calculates the [(dS/dp)^T]*vector product
+   * \param[in] in - multiplied vector (3*num_nodes)
+   * \param[out] out - resultant vector (num_nodes)
    */
-   void CalcTrans_dSdp_Product(InnerProdVector& u_cfd, InnerProdVector& wrk);
+   void CalcTrans_dSdp_Product(InnerProdVector& in, InnerProdVector& out);
 
   /*!
    * \brief calculates the displaced coordinates and nozzle area
