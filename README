@@ -8,14 +8,16 @@ is specialized to compute node displacements in a mesh of 2D beam elements due t
 distributed pressures on the structure.
 
 This code is being developed for coupling with Prof. Jason Hicken's
-Quasi 1D Euler solver as part of the MDA for multidisciplinary optimization 
-algorithms. Repository for the coupling project can be found here:
+Quasi 1D Euler solver as part of the code MDA evaluation for multidisciplinary
+design optimization applications. 
+
+Repository for the aero-structural optimization project can be found here:
 https://bitbucket.org/denera/aero_struct_mda
 _________________________________________________________________________________
 DEPENDENCIES:
-+ Boost
-+ Quasi 1D Euler solver
-+ Kona (indirect) (https://bitbucket.org/jehicken/kona)
++ Boost (http://www.boost.org/)
++ Quasi 1D Euler solver (https://bitbucket.org/jehicken/quasi_1d_euler)
++ Kona (https://bitbucket.org/jehicken/kona)
 _________________________________________________________________________________
 DESIGN NOTES:
 
