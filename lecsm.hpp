@@ -206,6 +206,13 @@ public:
     geom_.InspectElements();
   }
 
+  /*!
+   * \brief solves the CSM problem for a given forcing vector using conjugate gradient
+   * \param[in] rhs - prescribed right-hand-side vector for the system
+   * \result nodal displacements are calculated and saved to u_
+   */
+  void SolveFor(InnerProdVector & rhs);
+
 	/*!
    * \brief independent solution of a CSM problem using conjugate gradient
    */

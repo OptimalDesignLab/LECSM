@@ -64,5 +64,5 @@ void printMatrix(vector< vector<double> >& A, int rowA, int colA);
  * \param[in] maxIt - maximum number of iterations
  * \param[out] Disp - solution vector
  */
-void CGSolve(vector< vector<double> >& K, int rowK, int colK,
+int CGSolve(vector< vector<double> >& K, int rowK, int colK,
              vector<double>& F, int rowF, int maxIt, vector<double>& Disp);

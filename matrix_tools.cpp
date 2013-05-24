@@ -101,7 +101,7 @@ void printMatrix(vector< vector<double> >& A, int rowA, int colA)
 
 // ======================================================================
 
-void CGSolve(vector< vector<double> >& K, int rowK, int colK,
+int CGSolve(vector< vector<double> >& K, int rowK, int colK,
              vector<double>& F, int rowF, int maxIt, vector<double>& Disp)
 {  
   // Sanity check for system dimensions
@@ -111,10 +111,13 @@ void CGSolve(vector< vector<double> >& K, int rowK, int colK,
     exit(EXIT_FAILURE);
   }
   double tol = 0;
+
+  // Zero out the output vector
   for(int i = 0; i < rowF ;i++)
   {
     Disp[i] = 0;
   }
+
   double r[rowF];
   double p[rowF];
   double rtr = 0;
@@ -128,6 +131,8 @@ void CGSolve(vector< vector<double> >& K, int rowK, int colK,
   double Ap[rowF];
   double ptAp=0;
   int iter = 0;
+  
+  // Start CG iterations
   for(int k = 0; k < maxIt; k++)
   {
     iter++;
@@ -162,4 +167,6 @@ void CGSolve(vector< vector<double> >& K, int rowK, int colK,
     rtr = rtr_new;
     tol = rtr_new;
   }
+  // return number of iterations
+  return iter;
 }

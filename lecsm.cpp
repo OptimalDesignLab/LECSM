@@ -572,6 +572,64 @@ void LECSM::CalcResidual()
 
 // =====================================================================
 
+void LECSM::SolveFor(InnerProdVector & rhs)
+{
+  // Generate the global equation number mapping
+  int nnp = geom_.nnp;
+  vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
+  geom_.SetupEq(gm);
+
+  // Initiate global vectors used in the solver
+  int ndof = geom_.ndof;
+  int ndog = geom_.ndog;
+  vector<double> G(ndog), F(ndof);
+  vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
+  InitGlobalVecs(G, F);
+
+  // Calculate the stiffness matrix and the forcing vector
+  GetStiff(gm, G, F, K);
+  F.clear();
+
+  // extract values from the RHS matrix according to degree of freedoms
+  int p;
+  vector<double> F_new(ndof);
+  for (int i=0; i<nnp; i++) {
+    for (int j=0; j<3; j++) {
+      if (gm[j][i][0] == 1) {
+        p = gm[j][i][1];
+        F_new[p] = rhs(3*i+j);
+      }
+    }
+  }
+
+  // Solve the global Kd = F system
+  vector<double> disp(ndof);
+  int maxIt = 100;
+  int iter = CGSolve(K, ndof, ndof, F_new, ndof, maxIt, disp);
+  printf("LECSM: Solver converged in %i iterations!\n");
+
+  // Assemble the nodal displacements
+  for (int A = 0; A < nnp; A++)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      int t = gm[i][A][0];
+      double P = gm[i][A][1];
+      if (t == 1)             // dof
+        {u_(3*A+i) = disp[P];}
+      else
+        {
+          if (t == 2)          // dog
+            {u_(3*A+i) = G[P];}
+          else
+            {u_(3*A+i) = 0;}
+        }
+    }
+  }
+}
+
+// =====================================================================
+
 void LECSM::Solve()
 {
 #if 0
@@ -612,8 +670,9 @@ void LECSM::Solve()
 
   // Solve the global Kd = F system
   vector<double> disp(ndof);
-  int maxIt = 100000;
-  CGSolve(K, ndof, ndof, F, ndof, maxIt, disp);
+  int maxIt = 100;
+  int iter = CGSolve(K, ndof, ndof, F, ndof, maxIt, disp);
+  printf("LECSM: Solver converged in %i iterations!\n");
 
   // Assemble the nodal displacements
   printf("Directions:\n");
