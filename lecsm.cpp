@@ -214,6 +214,7 @@ void LECSM::Calc_dSdu_Product(const InnerProdVector& in, InnerProdVector& out)
   // Calculate the stiffness matrix and the forcing vector
   GetStiff(gm, G, F, K);
   G.clear();
+  F.clear();
 
   int p;
   vector<double> u_dof(ndof);
@@ -572,6 +573,20 @@ void LECSM::CalcResidual()
 
 int LECSM::SolveFor(InnerProdVector & rhs)
 {
+  // Generate the global equation number mapping
+  int nnp = geom_.nnp;
+  vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
+  geom_.SetupEq(gm);
+
+  // Make sure the RHS vector has zeros for all fixed degrees of freedom
+  for (int i=0; i<nnp; i++) {
+    Node node = geom_.allNodes[i];
+    for (int j=0; j<3; j++) {
+      if (node.type[j] == 1)
+        rhs(3*i+j) = 0;
+    }
+  }
+
   kona::MatrixVectorProduct<InnerProdVector>* 
       mat_vec = new StiffnessVectorProduct(this);
   kona::Preconditioner<InnerProdVector>*
