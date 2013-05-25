@@ -209,12 +209,15 @@ public:
   }
 
   /*!
-   * \brief solves the CSM problem for a given forcing vector using conjugate gradient
+   * \brief solves the CSM problem for a given forcing vector using MINRES
    * \param[in] rhs - prescribed right-hand-side vector for the system
+   * \param[in] max_iter - maximum number of iterations permitted
+   * \param[in] tol - relative residual tolerance desired
    * \result nodal displacements are calculated and saved to u_
    * \returns number of matrix-vector products
    */
-  int SolveFor(InnerProdVector & rhs);
+  int SolveFor(InnerProdVector & rhs, const int & max_iter = 1000,
+               const double & tol = 1e-6);
 
 	/*!
    * \brief independent solution of a CSM problem using conjugate gradient

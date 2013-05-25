@@ -571,18 +571,15 @@ void LECSM::CalcResidual()
 
 // =====================================================================
 
-int LECSM::SolveFor(InnerProdVector & rhs)
+int LECSM::SolveFor(InnerProdVector & rhs, const int & max_iter,
+                    const double & tol)
 {
-  // Generate the global equation number mapping
+  // Make sure the RHS vector has zeros for all fixed degrees of freedom  
   int nnp = geom_.nnp;
-  vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
-  geom_.SetupEq(gm);
-
-  // Make sure the RHS vector has zeros for all fixed degrees of freedom
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     for (int j=0; j<3; j++) {
-      if (node.type[j] == 1)
+      if (node.type[j] != 1)
         rhs(3*i+j) = 0.0;
     }
   }
@@ -594,11 +591,9 @@ int LECSM::SolveFor(InnerProdVector & rhs)
 
   string filename = "lecsm_krylov.dat";
   ofstream fout(filename.c_str());
-  int max_iter = 40;
-  double tol = 1e-6;
   int precond_calls = 0;
   u_ = 0.0;
-  kona::FGMRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
+  kona::MINRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
                precond_calls, fout);  
   return precond_calls;
   

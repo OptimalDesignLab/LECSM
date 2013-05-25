@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 21;
+	int nnp = 41;
 	LECSM csm(nnp);
 
 	// Define material properties
