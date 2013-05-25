@@ -26,20 +26,15 @@ void matrixMult(vector< vector<double> >& A, int rowA, int colA,
       Multiplication failed!\n");
     exit(EXIT_FAILURE);
   }
-  // Pre-allocate the resultant matrix.
-  for (int i = 0; i < rowA; i++)
-  {
-    for (int j = 0; j < colB; j++)
-      {AB[i][j] = 0;}
-  }
   // Perform the multiplication.
   for (int i = 0; i < rowA; i++)
   {
     for (int j = 0; j < colB; j++)
     {
+      AB[i][j] = 0;
       for (int k = 0; k < colA; k++)
       {
-        AB[i][j] = AB[i][j] + A[i][k]*B[k][j];
+        AB[i][j] += A[i][k]*B[k][j];
       }
     }
   }
@@ -58,12 +53,10 @@ void matrixVecMult(vector< vector<double> >& A, int rowA, int colA,
       Multiplication failed!\n");
     exit(EXIT_FAILURE);
   }
-  // Pre-allocate the resultant vector.
-  for (int i = 0; i < rowB; i++)
-    {AB[i] = 0;}
   // Perform the multiplication.
   for (int i = 0; i < rowA; i++)
   {
+    AB[i] = 0;
     for (int j = 0; j < colA; j++)
     {
       AB[i] += A[i][j]*B[j];

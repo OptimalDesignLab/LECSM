@@ -199,49 +199,46 @@ void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
 
 void LECSM::Calc_dSdu_Product(const InnerProdVector& in, InnerProdVector& out)
 {
-  // Map out the global equation numbers
+  // Generate the global equation number mapping
   int nnp = geom_.nnp;
   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
   geom_.SetupEq(gm);
 
-  // Calculate the stiffness matrix (dS/du)
+  // Initiate global vectors used in the solver
   int ndof = geom_.ndof;
   int ndog = geom_.ndog;
   vector<double> G(ndog), F(ndof);
   vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
   InitGlobalVecs(G, F);
+
+  // Calculate the stiffness matrix and the forcing vector
   GetStiff(gm, G, F, K);
   G.clear();
-  F.clear();
 
-  // Strip u_csm of fixed nodes
+  int p;
   vector<double> u_dof(ndof);
-  int p = 0;
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3; j++) {
       if (gm[j][i][0] == 1) {
-        u_dof[p] = in(i*3+j);
-        p++;
+        p = gm[j][i][1];
+        u_dof[p] = in(3*i+j);
       }
     }
   }
 
-  // Perform the (dS/du)*u_dof operation
+  // Calculate the K*u product
   vector<double> v_dof(ndof);
   matrixVecMult(K, ndof, ndof, u_dof, ndof, v_dof);
   u_dof.clear();
+  K.clear();
 
-  // Insert results into v_csm
-  int a, b;
+  // Assemble the whole product
   for (int i=0; i<nnp; i++) {
     for (int j=0; j<3; j++) {
-      a = (i*3)+j;
-      if (gm[j][i][0] == 1) {  // node dof is free
-        b = gm[j][i][1];
-        out(a) = v_dof[b];
-      }
-      else
-        out(a) = 0;
+      if (gm[j][i][0] == 1)   // node is free
+        out(3*i+j) = v_dof[gm[j][i][1]];
+      else  // node is fixed
+        out(3*i+j) = 0;
     }
   }
 
@@ -249,7 +246,6 @@ void LECSM::Calc_dSdu_Product(const InnerProdVector& in, InnerProdVector& out)
   gm.clear();
   K.clear();
   v_dof.clear();
-
 }
 
 // =====================================================================
