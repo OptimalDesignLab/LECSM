@@ -7,6 +7,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <fstream>
+#include <string>
 #include "./lecsm.hpp"
 #include "./matrix_tools.hpp"
 
@@ -195,7 +197,7 @@ void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
 
 // =====================================================================
 
-void LECSM::Calc_dSdu_Product(InnerProdVector& in, InnerProdVector& out)
+void LECSM::Calc_dSdu_Product(const InnerProdVector& in, InnerProdVector& out)
 {
   // Map out the global equation numbers
   int nnp = geom_.nnp;
@@ -572,8 +574,24 @@ void LECSM::CalcResidual()
 
 // =====================================================================
 
-void LECSM::SolveFor(InnerProdVector & rhs)
+int LECSM::SolveFor(InnerProdVector & rhs)
 {
+  kona::MatrixVectorProduct<InnerProdVector>* 
+      mat_vec = new StiffnessVectorProduct(this);
+  kona::Preconditioner<InnerProdVector>*
+      precond = new ApproxStiff(this);
+
+  string filename = "lecsm_krylov.dat";
+  ofstream fout(filename.c_str());
+  int max_iter = 40;
+  double tol = 1e-6;
+  int precond_calls = 0;
+  u_ = 0.0;
+  kona::FGMRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
+               precond_calls, fout);  
+  return precond_calls;
+  
+#if 0
   // Generate the global equation number mapping
   int nnp = geom_.nnp;
   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
@@ -604,7 +622,7 @@ void LECSM::SolveFor(InnerProdVector & rhs)
 
   // Solve the global Kd = F system
   vector<double> disp(ndof);
-  int maxIt = 100;
+  int maxIt = 1000;
   int iter = CGSolve(K, ndof, ndof, F_new, ndof, maxIt, disp);
   printf("LECSM: Solver converged in %i iterations!\n", iter);
 
@@ -626,6 +644,7 @@ void LECSM::SolveFor(InnerProdVector & rhs)
         }
     }
   }
+#endif
 }
 
 // =====================================================================
@@ -697,4 +716,11 @@ void LECSM::Solve()
       printf("    Node %d displaced %f in direction %d\n", A, u_(3*A+i), i);
     }
   }
+}
+
+// ======================================================================
+
+void StiffnessVectorProduct::operator()(const InnerProdVector & u, 
+                                        InnerProdVector & v) { 
+  solver_->Calc_dSdu_Product(u, v);
 }

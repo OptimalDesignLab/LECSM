@@ -9,6 +9,8 @@
 #include <vector>
 #include "./1D_mesh_tools.hpp"
 #include "../quasi_1d_euler/inner_prod_vector.hpp"
+#include <krylov.hpp>
+
 using namespace std;
 
 // =====================================================================
@@ -145,7 +147,7 @@ public:
    * \param[in] in - multiplied vector (3*num_nodes)
    * \param[out] out - resultant vector (3*num_nodes)
    */
-	void Calc_dSdu_Product(InnerProdVector& in, InnerProdVector& out);
+  void Calc_dSdu_Product(const InnerProdVector& in, InnerProdVector& out);
 
 	/*!
    * \brief calculates the (dA/du)*vector product
@@ -210,8 +212,9 @@ public:
    * \brief solves the CSM problem for a given forcing vector using conjugate gradient
    * \param[in] rhs - prescribed right-hand-side vector for the system
    * \result nodal displacements are calculated and saved to u_
+   * \returns number of matrix-vector products
    */
-  void SolveFor(InnerProdVector & rhs);
+  int SolveFor(InnerProdVector & rhs);
 
 	/*!
    * \brief independent solution of a CSM problem using conjugate gradient
@@ -229,4 +232,68 @@ private:
 	int nnp_;
 	double E_, w_, t_, h_;
 	Mesh geom_;
+};
+
+// ======================================================================
+
+/*!
+ * \class StiffnessVectorProduct
+ * \brief specialization of matrix-vector product for lecsm
+ */
+class StiffnessVectorProduct :
+    public kona::MatrixVectorProduct<InnerProdVector> {
+ public:
+
+  /*!
+   * \brief default constructor
+   * \param[in] csm_solver - a linear elasticity solver (defines product)
+   */
+  StiffnessVectorProduct(LECSM * solver) {
+    solver_ = solver; 
+  } 
+
+  ~StiffnessVectorProduct() {} ///< class destructor
+
+  /*!
+   * \brief operator that defines the Stiffness-Matrix-Vector product
+   * \param[in] u - vector that is being multiplied by K
+   * \param[out] v - vector that is the result of the product
+   */
+  void operator()(const InnerProdVector & u, InnerProdVector & v);
+
+ private:
+  LECSM * solver_; ///< used to access the Matrix-Vector product routine
+};
+
+// ======================================================================
+
+/*!
+ * \class ApproxStiff
+ * \brief specialization of preconditioner for lecsm
+ */
+class ApproxStiff :
+    public kona::Preconditioner<InnerProdVector> {
+ public:
+
+  /*!
+   * \brief default constructor
+   * \param[in] euler_solver - a Quasi1DEuler solver to access precond.
+   */
+  ApproxStiff(LECSM * solver) {
+    solver_ = solver; 
+  }
+
+  ~ApproxStiff() {} ///< class destructor
+
+  /*!
+   * \brief operator that applies the approximate inverse Stiffness matrix.
+   * \param[in] u - vector that is being preconditioned
+   * \param[out] v - vector that is the result of the preconditioning
+   */
+  void operator()(InnerProdVector & u, InnerProdVector & v) {
+    v = u;
+  }
+
+ private:
+  LECSM * solver_; ///< used to access the Stiffness matrix
 };

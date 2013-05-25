@@ -7,6 +7,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ostream>
+#include <iostream>
+#include <math.h>
 #include "./matrix_tools.hpp"
 using namespace std;
 
@@ -168,5 +171,6 @@ int CGSolve(vector< vector<double> >& K, int rowK, int colK,
     tol = rtr_new;
   }
   // return number of iterations
+  std::cout << "CGSolve: tol = " << sqrt(tol) << std::endl;
   return iter;
 }

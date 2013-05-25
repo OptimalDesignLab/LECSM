@@ -16,7 +16,7 @@ using namespace std;
 int main() {
 
 	// Declare the solver
-	int nnp = 51;
+	int nnp = 21;
 	LECSM csm(nnp);
 
 	// Define material properties
@@ -99,7 +99,7 @@ int main() {
 // VALIDATING THE PARTIAL DERIVATIVES
 // =====================================================================
 
-#if 1
+#if 0
   //csm.InspectMesh();
 
   InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0), wrkQ(3*nnp,1.0);
@@ -201,6 +201,9 @@ int main() {
   // Call FEA solver
   csm.Solve();
   InnerProdVector u = csm.get_u();
+
+  InnerProdVector rhs(3*nnp, 1.0);
+  csm.SolveFor(rhs);
 #endif
 
 // =====================================================================
