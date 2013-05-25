@@ -239,7 +239,7 @@ void LECSM::Calc_dSdu_Product(const InnerProdVector& in, InnerProdVector& out)
       if (gm[j][i][0] == 1)   // node is free
         out(3*i+j) = v_dof[gm[j][i][1]];
       else  // node is fixed
-        out(3*i+j) = 0;
+        out(3*i+j) = 0.0;
     }
   }
 
@@ -563,7 +563,7 @@ void LECSM::CalcResidual()
       if (gm[j][i][0] == 1)   // node is free
         res_(3*i+j) = res_dof[gm[j][i][1]];
       else  // node is fixed
-        res_(3*i+j) = 0;
+        res_(3*i+j) = 0.0;
     }
   }
   res_dof.clear();
@@ -583,7 +583,7 @@ int LECSM::SolveFor(InnerProdVector & rhs)
     Node node = geom_.allNodes[i];
     for (int j=0; j<3; j++) {
       if (node.type[j] == 1)
-        rhs(3*i+j) = 0;
+        rhs(3*i+j) = 0.0;
     }
   }
 
@@ -722,7 +722,7 @@ void LECSM::Solve()
           if (t == 2)          // dog
             {u_(3*A+i) = G[P];}
           else
-            {u_(3*A+i) = 0;}
+            {u_(3*A+i) = 0.0;}
         }
       printf("    Node %d displaced %f in direction %d\n", A, u_(3*A+i), i);
     }
