@@ -85,7 +85,7 @@ public:
    * \brief updates the CSM mesh with displacements
    * \param[in] u_csm - vector of displacements (3*nnp)
    */
-	void set_u(const InnerProdVector & u_csm);
+	void set_u(const InnerProdVector & u_csm) { u_ = u_csm; }
 
 	/*!
    * \brief sets the pressure values at each node
@@ -100,15 +100,20 @@ public:
    */
 	void GenerateMesh(const InnerProdVector & x, const InnerProdVector & y);
 
-   /*!
+  /*!
    * \brief resets the solver coordinates to the nodal coordinates of the geometry
    */
-   void ResetCoords();
+  void ResetCoords();
 
-   /*!
+  /*!
+   * \brief resets the solver coordinates to the nodal coordinates of the geometry
+   */
+  void SetCoords(const InnerProdVector & x, const InnerProdVector & y);
+
+  /*!
    * \brief updates the geometry with the coordinates stored in the solver
    */
-   void UpdateMesh();
+  void UpdateMesh();
 
 	/*!
    * \brief set the nodal boundary conditions (displacements and forcing)
@@ -156,26 +161,40 @@ public:
    */
 	void Calc_dAdu_Product(InnerProdVector& in, InnerProdVector& out);
 
-   /*!
+  /*!
    * \brief calculates the [(dA/du)^T]*vector product
    * \param[in] in - multiplied vector (num_nodes)
    * \param[out] out - resultant vector (3*num_nodes)
    */
-   void CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out);
+  void CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out);
 
-   /*!
-   * \brief calculates the (du/dA)*vector product
+  /*!
+   * \brief calculates the (dy/dA)*vector product
    * \param[in] in - multiplied vector (num_nodes)
-   * \param[out] out - resultant vector (3*num_nodes)
-   */
-   void Calc_dudA_Product(InnerProdVector& in, InnerProdVector& out);
-
-   /*!
-   * \brief calculates the [(du/dA)^T]*vector product
-   * \param[in] in - multiplied vector (3*num_nodes)
    * \param[out] out - resultant vector (num_nodes)
    */
-   void CalcTrans_dudA_Product(InnerProdVector& in, InnerProdVector& out);
+  void Calc_dydA_Product(InnerProdVector& in, InnerProdVector& out);
+
+  /*!
+   * \brief calculates the [(dy/dA)^T]*vector product
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (num_nodes)
+   */
+  void CalcTrans_dydA_Product(InnerProdVector& in, InnerProdVector& out);
+
+  /*!
+   * \brief product for FD derivative residual w.r.t nodal coordinates
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (num_nodes)
+   */
+  void CalcFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
+
+  /*!
+   * \brief transpose product for FD derivative residual w.r.t nodal coordinates
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (num_nodes)
+   */
+  void CalcTransFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
 
 	/*!
    * \brief calculates the (dS/dp)*vector product
@@ -184,12 +203,12 @@ public:
    */
 	void Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out);
 
-   /*!
+  /*!
    * \brief calculates the [(dS/dp)^T]*vector product
    * \param[in] in - multiplied vector (3*num_nodes)
    * \param[out] out - resultant vector (num_nodes)
    */
-   void CalcTrans_dSdp_Product(InnerProdVector& in, InnerProdVector& out);
+  void CalcTrans_dSdp_Product(InnerProdVector& in, InnerProdVector& out);
 
   /*!
    * \brief calculates the displaced coordinates and nozzle area

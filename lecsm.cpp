@@ -14,11 +14,6 @@
 
 using namespace std;
 
-void LECSM::set_u(const InnerProdVector & u_csm)
-{ 
-  u_ = u_csm;
-}
-
 // =====================================================================
 
 void LECSM::GenerateMesh(const InnerProdVector & x, const InnerProdVector & y)
@@ -258,7 +253,6 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     dAdu[i][3*i] = 0;
-    out(i) = 0;
     if (node.type[1] == 1)
       dAdu[i][3*i+1] = -2*w_;
     else
@@ -267,6 +261,7 @@ void LECSM::Calc_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
   }
 
   for (int i=0; i<nnp; i++) {
+    out(i) = 0;
     for (int j=0; j<3*nnp; j++) {
       out(i) += dAdu[i][j] * in(j);
     }
@@ -303,39 +298,121 @@ void LECSM::CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
 
 // =====================================================================
 
-void LECSM::Calc_dudA_Product(InnerProdVector& in, InnerProdVector& out)
+void LECSM::Calc_dydA_Product(InnerProdVector& in, InnerProdVector& out)
 {
   int nnp = geom_.nnp;
-  vector< vector<double> > dudA(3*nnp, vector<double>(nnp, 0.0));
+  vector< vector<double> > dydA(nnp, vector<double>(nnp, 0.0));
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     if (node.type[1] == 1)
-      dudA[3*i+1][i] = -1/(2*w_);
+      dydA[i][i] = -1/(2*w_);
   }
   for (int i=0; i<3*nnp; i++) {
+    out(i) = 0;
     for (int j=0; j<nnp; j++)
-      out(i) += dudA[i][j] * in(j);
+      out(i) += dydA[i][j] * in(j);
   }
-  dudA.clear();
+  dydA.clear();
 }
 
 // =====================================================================
 
-void LECSM::CalcTrans_dudA_Product(InnerProdVector& in, InnerProdVector& out)
+void LECSM::CalcTrans_dydA_Product(InnerProdVector& in, InnerProdVector& out)
 {
   int nnp = geom_.nnp;
-  vector< vector<double> > dudA(3*nnp, vector<double>(nnp, 0.0));
+  vector< vector<double> > dydA(nnp, vector<double>(nnp, 0.0));
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     if (node.type[1] == 1)
-      dudA[3*i+1][i] = -1/(2*w_);
+      dydA[i][i] = -1/(2*w_);
   }
   for (int i=0; i<nnp; i++) {
+    out(i) = 0;
     for (int j=0; j<3*nnp; j++)
-      out(i) += dudA[j][i] * in(j);
+      out(i) += dydA[j][i] * in(j);
   }
-  dudA.clear();
+  dydA.clear();
 }
+
+// =====================================================================
+
+void LECSM::CalcFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
+{
+  // NOTE: Cannot find the paper on easier finite differencing
+  // ~~~ FIX THIS LATER ~~~
+  ResetCoords();
+  InnerProdVector save_y = yCoords_;
+  double delta = 1.e-6;
+  InnerProdVector disp(3*nnp_, 1.0);
+  set_u(disp);
+
+  CalcResidual();
+  InnerProdVector res0 = get_res();
+
+  // Calculate derivative via finite differencing
+  vector< vector<double> > dSdy(3*nnp_, vector<double>(nnp_, 0.0));
+  for (int i=0; i < nnp_; i++) {
+    yCoords_(i) += delta;
+    UpdateMesh();
+    CalcResidual();
+    InnerProdVector res1 = get_res();
+    for (int j=0; j < 3*nnp_; j++) {
+      dSdy[j][i] = (res1(j) - res0(j))/delta;
+    }
+    yCoords_(i) = save_y(i);
+    UpdateMesh();
+  }
+
+  // Perform the multiplication
+  for (int i=0; i < 3*nnp_; i++) {
+    out(i) = 0;
+    for (int j=0; j < nnp_; j++)
+      out(i) += dSdy[i][j] * in(j);
+  }
+
+  // Clean-up
+  dSdy.clear();
+}
+
+// =====================================================================
+
+void LECSM::CalcTransFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
+{ 
+  // Set up parameters necessary for FD
+  ResetCoords();
+  InnerProdVector save_y = yCoords_;
+  double delta = 1.e-6;
+  InnerProdVector disp(3*nnp_, 1.0);
+  set_u(disp);
+
+  CalcResidual();
+  InnerProdVector res0 = get_res();
+
+  // Calculate derivative via finite differencing
+  vector< vector<double> > dSdy(3*nnp_, vector<double>(nnp_, 0.0));
+  for (int i=0; i < nnp_; i++) {
+    yCoords_(i) += delta;
+    UpdateMesh();
+    CalcResidual();
+    InnerProdVector res1 = get_res();
+    for (int j=0; j < 3*nnp_; j++) {
+      dSdy[j][i] = (res1(j) - res0(j))/delta;
+    }
+    yCoords_(i) = save_y(i);
+    UpdateMesh();
+  }
+
+  // Perform the transpose multiplication
+  for (int i=0; i < nnp_; i++) {
+    out(i) = 0;
+    for (int j=0; j < 3*nnp_; j++)
+      out(i) += dSdy[j][i] * in(j);
+  }
+
+  // Clean-up
+  dSdy.clear();  
+}
+
 // =====================================================================
 
 void LECSM::Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
@@ -360,19 +437,6 @@ void LECSM::Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out)
     idL = nodeL.id;
     idR = nodeR.id;
     vector< vector<double> > dSdp_elem(6, vector<double>(2));
-
-#if 0
-  double q1 = -P[0]*w;
-  double q2 = -P[1]*w;
-  double f1 = (length/6)*((2*q1)+q2);
-  double f2 = (length/6)*(q1+(2*q2));
-  FE[0] = (-sine*f1) + nodeL.forceBC[0];
-  FE[1] = (cosine*f1) + nodeL.forceBC[1];
-  FE[2] = nodeL.forceBC[2];
-  FE[3] = (-sine*f2) + nodeR.forceBC[0];
-  FE[4] = (cosine*f2) + nodeR.forceBC[1];
-  FE[5] = nodeR.forceBC[2];
-#endif
   
     // Calculate element length and orientation
     x1 = nodeL.coords[0];
@@ -596,61 +660,6 @@ int LECSM::SolveFor(InnerProdVector & rhs, const int & max_iter,
   kona::MINRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
                precond_calls, fout);  
   return precond_calls;
-  
-#if 0
-  // Generate the global equation number mapping
-  int nnp = geom_.nnp;
-  vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
-  geom_.SetupEq(gm);
-
-  // Initiate global vectors used in the solver
-  int ndof = geom_.ndof;
-  int ndog = geom_.ndog;
-  vector<double> G(ndog), F(ndof);
-  vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
-  InitGlobalVecs(G, F);
-
-  // Calculate the stiffness matrix and the forcing vector
-  GetStiff(gm, G, F, K);
-  F.clear();
-
-  // extract values from the RHS matrix according to degree of freedoms
-  int p;
-  vector<double> F_new(ndof);
-  for (int i=0; i<nnp; i++) {
-    for (int j=0; j<3; j++) {
-      if (gm[j][i][0] == 1) {
-        p = gm[j][i][1];
-        F_new[p] = rhs(3*i+j);
-      }
-    }
-  }
-
-  // Solve the global Kd = F system
-  vector<double> disp(ndof);
-  int maxIt = 1000;
-  int iter = CGSolve(K, ndof, ndof, F_new, ndof, maxIt, disp);
-  printf("LECSM: Solver converged in %i iterations!\n", iter);
-
-  // Assemble the nodal displacements
-  for (int A = 0; A < nnp; A++)
-  {
-    for (int i = 0; i < 3; i++)
-    {
-      int t = gm[i][A][0];
-      double P = gm[i][A][1];
-      if (t == 1)             // dof
-        {u_(3*A+i) = disp[P];}
-      else
-        {
-          if (t == 2)          // dog
-            {u_(3*A+i) = G[P];}
-          else
-            {u_(3*A+i) = 0;}
-        }
-    }
-  }
-#endif
 }
 
 // =====================================================================
