@@ -108,7 +108,7 @@ public:
   /*!
    * \brief sets the solver coordinates to the given x and y vectors
    */
-  void set_coords(InnerProdVector & x, InnerProdVector & y);
+  void set_coords(const InnerProdVector & x, const InnerProdVector & y);
 
   /*!
    * \brief updates the geometry with the coordinates stored in the solver

@@ -65,7 +65,7 @@ void LECSM::ResetCoords()
 
 // =====================================================================
 
-void LECSM::set_coords(InnerProdVector & x, InnerProdVector & y)
+void LECSM::set_coords(const InnerProdVector & x, const InnerProdVector & y)
 {
   xCoords_ = x;
   yCoords_ = y;
