@@ -65,12 +65,25 @@ void LECSM::ResetCoords()
 
 // =====================================================================
 
+void LECSM::set_coords(InnerProdVector & x, InnerProdVector & y)
+{
+  xCoords_ = x;
+  yCoords_ = y;
+}
+
+// =====================================================================
+
 void LECSM::UpdateMesh()
 {
   int nnp = geom_.nnp;
+  int nel = geom_.nel;
   for (int i=0; i<nnp; i++) {
     geom_.allNodes[i].coords[0] = xCoords_(i);
     geom_.allNodes[i].coords[1] = yCoords_(i);
+  }
+  for (int i=0; i<nel; i++) {
+    geom_.allElems[i].adjNodes[0] = geom_.allNodes[i];
+    geom_.allElems[i].adjNodes[1] = geom_.allNodes[i+1];
   }
 }
 

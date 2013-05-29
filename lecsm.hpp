@@ -106,9 +106,9 @@ public:
   void ResetCoords();
 
   /*!
-   * \brief resets the solver coordinates to the nodal coordinates of the geometry
+   * \brief sets the solver coordinates to the given x and y vectors
    */
-  void SetCoords(const InnerProdVector & x, const InnerProdVector & y);
+  void set_coords(InnerProdVector & x, InnerProdVector & y);
 
   /*!
    * \brief updates the geometry with the coordinates stored in the solver
