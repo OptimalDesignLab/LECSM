@@ -176,13 +176,6 @@ public:
   void Calc_dydA_Product(InnerProdVector& in, InnerProdVector& out);
 
   /*!
-   * \brief calculates the [(dy/dA)^T]*vector product
-   * \param[in] in - multiplied vector (num_nodes)
-   * \param[out] out - resultant vector (num_nodes)
-   */
-  void CalcTrans_dydA_Product(InnerProdVector& in, InnerProdVector& out);
-
-  /*!
    * \brief product for FD derivative residual w.r.t nodal coordinates
    * \param[in] in - multiplied vector (num_nodes)
    * \param[out] out - resultant vector (num_nodes)

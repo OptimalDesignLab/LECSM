@@ -314,37 +314,13 @@ void LECSM::CalcTrans_dAdu_Product(InnerProdVector& in, InnerProdVector& out)
 void LECSM::Calc_dydA_Product(InnerProdVector& in, InnerProdVector& out)
 {
   int nnp = geom_.nnp;
-  vector< vector<double> > dydA(nnp, vector<double>(nnp, 0.0));
   for (int i=0; i<nnp; i++) {
     Node node = geom_.allNodes[i];
     if (node.type[1] == 1)
-      dydA[i][i] = -1/(2*w_);
+      out(i) = -1.0*in(i)/(2.0*w_);
+    else
+      out(i) = 0.0;
   }
-  for (int i=0; i<3*nnp; i++) {
-    out(i) = 0;
-    for (int j=0; j<nnp; j++)
-      out(i) += dydA[i][j] * in(j);
-  }
-  dydA.clear();
-}
-
-// =====================================================================
-
-void LECSM::CalcTrans_dydA_Product(InnerProdVector& in, InnerProdVector& out)
-{
-  int nnp = geom_.nnp;
-  vector< vector<double> > dydA(nnp, vector<double>(nnp, 0.0));
-  for (int i=0; i<nnp; i++) {
-    Node node = geom_.allNodes[i];
-    if (node.type[1] == 1)
-      dydA[i][i] = -1/(2*w_);
-  }
-  for (int i=0; i<nnp; i++) {
-    out(i) = 0;
-    for (int j=0; j<3*nnp; j++)
-      out(i) += dydA[j][i] * in(j);
-  }
-  dydA.clear();
 }
 
 // =====================================================================
@@ -743,11 +719,13 @@ void LECSM::Solve()
   int iter = CGSolve(K, ndof, ndof, F, ndof, maxIt, disp);
   printf("LECSM: Solver converged in %i iterations!\n", iter);
 
+#if 0
   // Assemble the nodal displacements
   printf("Directions:\n");
   printf("  0 - x-axis\n");
   printf("  1 - y-axis\n");
   printf("  2 - rotation about z-axis\n");
+#endif
   for (int A = 0; A < nnp; A++)
   {
     for (int i = 0; i < 3; i++)
@@ -763,7 +741,7 @@ void LECSM::Solve()
           else
             {u_(3*A+i) = 0.0;}
         }
-      printf("    Node %d displaced %f in direction %d\n", A, u_(3*A+i), i);
+      //printf("    Node %d displaced %f in direction %d\n", A, u_(3*A+i), i);
     }
   }
 }
