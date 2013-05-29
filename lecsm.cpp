@@ -351,6 +351,28 @@ void LECSM::CalcTrans_dydA_Product(InnerProdVector& in, InnerProdVector& out)
 
 void LECSM::CalcFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
 {
+  // Calculate the Residual at the unperturbed state
+  CalcResidual();
+  InnerProdVector res0 = get_res();
+
+  // Perturb the y coordinates
+  double eps = 1.e-6;
+  InnerProdVector save_y = yCoords_;
+  for (int i = 0; i < nnp_; i++)
+    yCoords_(i) += eps*in(i);
+
+  // Re-evaluate residual
+  UpdateMesh();
+  CalcResidual();
+  out = get_res();
+  out -= res0;
+  out /= eps;
+
+  // Reset coordinates
+  yCoords_ = save_y;
+  UpdateMesh();
+  
+#if 0
   // NOTE: Cannot find the paper on easier finite differencing
   // ~~~ FIX THIS LATER ~~~
   ResetCoords();
@@ -385,6 +407,7 @@ void LECSM::CalcFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
 
   // Clean-up
   dSdy.clear();
+#endif
 }
 
 // =====================================================================
