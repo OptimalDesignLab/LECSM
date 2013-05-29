@@ -417,9 +417,7 @@ void LECSM::CalcTransFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
   // Set up parameters necessary for FD
   ResetCoords();
   InnerProdVector save_y = yCoords_;
-  double delta = 1.e-6;
-  InnerProdVector disp(3*nnp_, 1.0);
-  set_u(disp);
+  double delta = 1.e-7;
 
   CalcResidual();
   InnerProdVector res0 = get_res();
@@ -427,12 +425,13 @@ void LECSM::CalcTransFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
   // Calculate derivative via finite differencing
   vector< vector<double> > dSdy(3*nnp_, vector<double>(nnp_, 0.0));
   for (int i=0; i < nnp_; i++) {
-    yCoords_(i) += delta;
+    double eps = std::max(delta*yCoords_(i), kona::kEpsilon);
+    yCoords_(i) += eps;
     UpdateMesh();
     CalcResidual();
     InnerProdVector res1 = get_res();
     for (int j=0; j < 3*nnp_; j++) {
-      dSdy[j][i] = (res1(j) - res0(j))/delta;
+      dSdy[j][i] = (res1(j) - res0(j))/eps;
     }
     yCoords_(i) = save_y(i);
     UpdateMesh();
