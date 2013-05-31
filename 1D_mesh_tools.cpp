@@ -215,7 +215,7 @@ void Element::GetElemStiff(type x1, type x2, type y1, type y2,
   Node nodeR = adjNodes[1];
   int idL = nodeL.id;
   int idR = nodeR.id;
-
+  
   // Calculate the element length and orientation
   type length = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
   type cosine = (x2 - x1)/length;

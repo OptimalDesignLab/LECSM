@@ -172,7 +172,7 @@ void LECSM::GetStiff(vector< vector< vector<int> > >& gm,
 // =====================================================================
 
 template <typename type>
-void LECSM::GetStiff(vector<type> x, vector<type> y,
+void LECSM::GetStiff(const vector<type>& x, const vector<type>& y,
                      vector< vector< vector<int> > >& gm,
                      vector<type>& G, vector<type>& F,
                      vector< vector<type> >& K)
@@ -212,12 +212,12 @@ void LECSM::GetStiff(vector<type> x, vector<type> y,
 }
 
 // explicit instantiations
-template void LECSM::GetStiff<double>(vector<double> x, vector<double> y,
+template void LECSM::GetStiff<double>(const vector<double>& x, const vector<double>& y,
                                       vector< vector< vector<int> > >& gm,
                                       vector<double>& G, vector<double>& F,
                                       vector< vector<double> >& K);
 template void LECSM::GetStiff<complex<double> >(
-    vector<complex<double> > x, vector<complex<double> > y,
+    const vector<complex<double> >& x, const vector<complex<double> >& y,
     vector< vector< vector<int> > >& gm,
     vector<complex<double> >& G, vector<complex<double> >& F,
     vector< vector<complex<double> > >& K);
@@ -447,8 +447,8 @@ void LECSM::CalcCmplx_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
   double eps = 1e-40;
   vector<complex<double> > x_cmplx(nnp_), y_cmplx(nnp_), res_cmplx(3*nnp_);
   for (int i = 0; i < nnp_; i++) {
-    x_cmplx[i] = (xCoords_(i), 0.0);
-    y_cmplx[i] = (yCoords_(i), eps*in(i));
+    x_cmplx[i] = complex<double>(geom_.allNodes[i].coords[0], 0.0);
+    y_cmplx[i] = complex<double>(geom_.allNodes[i].coords[1], eps*in(i));
   }
   
   // Calculate the Residual at the unperturbed state
@@ -499,6 +499,42 @@ void LECSM::CalcTransFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
 
   // Clean-up
   dSdy.clear();  
+}
+
+// =====================================================================
+
+void LECSM::CalcTransCmplx_dSdy_Product(InnerProdVector& in,
+                                        InnerProdVector& out)
+{
+  double eps = 1e-40;
+  vector<complex<double> > x_cmplx(nnp_), y_cmplx(nnp_), res_cmplx(3*nnp_);
+  for (int i = 0; i < nnp_; i++) {
+    x_cmplx[i] = complex<double>(geom_.allNodes[i].coords[0], 0.0);
+    y_cmplx[i] = complex<double>(geom_.allNodes[i].coords[1], 0.0);
+  }
+  
+  // Calculate matrix via complex step
+  vector< vector<double> > dSdy(3*nnp_, vector<double>(nnp_, 0.0));
+  for (int i=0; i < nnp_; i++) {
+    y_cmplx[i] = complex<double>(real(y_cmplx[i]), eps);
+    CalcResidual<complex<double> >(x_cmplx, y_cmplx, res_cmplx);
+    for (int j=0; j < 3*nnp_; j++)
+      dSdy[j][i] = imag(res_cmplx[j])/eps;
+    y_cmplx[i] = complex<double>(real(y_cmplx[i]), 0.0);
+  }
+
+  // Perform the transpose multiplication
+  for (int i=0; i < nnp_; i++) {
+    out(i) = 0;
+    for (int j=0; j < 3*nnp_; j++)
+      out(i) += dSdy[j][i] * in(j);
+  }
+
+  // Clean-up
+  dSdy.clear();
+  x_cmplx.clear();
+  y_cmplx.clear();
+  res_cmplx.clear();
 }
 
 // =====================================================================
@@ -724,7 +760,8 @@ void LECSM::CalcResidual()
 // =====================================================================
 
 template <typename type>
-void LECSM::CalcResidual(vector<type> x, vector<type> y, vector<type> res)
+void LECSM::CalcResidual(const vector<type>& x, const vector<type>& y,
+                         vector<type>& res)
 {
   // Generate the global equation number mapping
   int nnp = geom_.nnp;
@@ -796,11 +833,11 @@ void LECSM::CalcResidual(vector<type> x, vector<type> y, vector<type> res)
 }
 
 // explicit instantiations
-template void LECSM::CalcResidual<double>(vector<double> x, vector<double> y,
-                                          vector<double> res);
+template void LECSM::CalcResidual<double>(const vector<double>& x, const vector<double>& y,
+                                          vector<double>& res);
 template void LECSM::CalcResidual<complex<double> >(
-    vector<complex<double> > x, vector<complex<double> > y,
-    vector<complex<double> > res);
+    const vector<complex<double> >& x, const vector<complex<double> >& y,
+    vector<complex<double> >& res);
 
 // =====================================================================
 

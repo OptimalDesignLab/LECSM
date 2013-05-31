@@ -150,7 +150,7 @@ public:
    * \param[out] K - global stiffness matrix
    */
   template <typename type>
-  void GetStiff(vector<type> x, vector<type> y,
+  void GetStiff(const vector<type>& x, const vector<type>& y,
                 vector< vector< vector<int> > >& gm,
                 vector<type>& G, vector<type>& F,
                 vector< vector<type> >& K);
@@ -211,6 +211,13 @@ public:
    */
   void CalcTransFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
 
+  /*!
+   * \brief transpose product for FD derivative residual w.r.t nodal coordinates
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (num_nodes)
+   */
+  void CalcTransCmplx_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
+  
 	/*!
    * \brief calculates the (dS/dp)*vector product
    * \param[in] in - multiplied vector (num_nodes)
@@ -242,7 +249,8 @@ public:
    * \param[out] res - CSM residual, Ku - f
    */
   template <typename type>
-  void CalcResidual(vector<type> x, vector<type> y, vector<type> res);
+  void CalcResidual(const vector<type>& x, const vector<type>& y,
+                    vector<type>& res);
   
   /*!
    * \brief inspects the solver mesh
