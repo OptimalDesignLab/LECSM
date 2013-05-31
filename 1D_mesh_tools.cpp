@@ -353,10 +353,11 @@ template void Element::GetElemStiff<complex<double> >(
 
 // =====================================================================
 
-void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE,
+template <typename type>
+void Element::Assemble(vector< vector<type> >& KE, vector<type>& FE,
                        vector< vector< vector<int> > >& lm,
-                       vector<double>& G, vector<double>& F,
-                       vector< vector<double> >& K)
+                       vector<type>& G, vector<type>& F,
+                       vector< vector<type> >& K)
 {
   int p = 0;
   for (int a = 0; a < nen; a++)
@@ -386,41 +387,16 @@ void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE,
   } // end a loop over nen (rows)
 }
 
-// =====================================================================
-
-void Element::Assemble(vector< vector<complex<double> > >& KE,
-                       vector<complex<double> >& FE,
-                       vector< vector< vector<int> > >& lm,
-                       vector<complex<double> >& G, vector<complex<double> >& F,
-                       vector< vector<complex<double> > >& K)
-{
-  int p = 0;
-  for (int a = 0; a < nen; a++)
-  {
-    for (int i = 0; i < 3; i++)
-    {
-      if (lm[i][a][0] == 1) // dof
-      {
-        int P = lm[i][a][1];
-        F[P] = F[P] + FE[p];
-        int q = 0;
-        for (int b = 0; b < nen; b++)
-        {
-          for (int j = 0; j < 3; j++)
-          {
-            int Q = lm[j][b][1];
-            if (lm[j][b][0] == 1) // dof
-              {K[P][Q] = K[P][Q] + KE[p][q];}
-            else if (lm[j][b][0] == 2) // dog
-              {F[P] = F[P] - G[Q]*KE[p][q];}
-            q++;
-          } // end j loop over nsd
-        } // end b loop over nen (columns)
-      }
-      p++;
-    } // end i loop over nsd
-  } // end a loop over nen (rows)
-}
+// explicit instantiations
+template void Element::Assemble<double>(vector< vector<double> >& KE,
+                                        vector<double>& FE,
+                                        vector< vector< vector<int> > >& lm,
+                                        vector<double>& G, vector<double>& F,
+                                        vector< vector<double> >& K);
+template void Element::Assemble<complex<double> >(
+    vector< vector<complex<double> > >& KE, vector<complex<double> >& FE,
+    vector< vector< vector<int> > >& lm, vector<complex<double> >& G,
+    vector<complex<double> >& F, vector< vector<complex<double> > >& K);
 
 // =====================================================================
 

@@ -106,7 +106,7 @@ public:
                     vector< vector< vector<int> > >& lm,
                     vector< vector<type> >& KE, vector<type>& FE);
 
-	/*!
+  /*!
    * \brief assemble the element contributions into global matrix/vectors
    * \param[in] KE - element stiffness matrix
    * \param[in] FE - element forcing vector
@@ -115,19 +115,12 @@ public:
    * \param[out] K - global stiffness matrix
    * \param[out] F - global forcing vector
    */
-  void Assemble(vector< vector<double> >& KE, vector<double>& FE,
+  template <typename type>
+  void Assemble(vector< vector<type> >& KE, vector<type>& FE,
                 vector< vector< vector<int> > >& lm,
-                vector<double>& G, vector<double>& F,
-                vector< vector<double> >& K);
+                vector<type>& G, vector<type>& F,
+                vector< vector<type> >& K);
 
-  /*!
-   * \brief complex version of the Assemble
-   */
-  void Assemble(vector< vector<complex<double> > >& KE,
-                vector<complex<double> >& FE,
-                vector< vector< vector<int> > >& lm,
-                vector<complex<double> >& G, vector<complex<double> >& F,
-                vector< vector<complex<double> > >& K);
 };
 
 // =====================================================================

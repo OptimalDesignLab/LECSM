@@ -165,7 +165,7 @@ void LECSM::GetStiff(vector< vector< vector<int> > >& gm,
     elem.GetElemStiff(E_, w_, t_, locP, gm, lm, KE, FE);
     
     // Assemble the element contributions into the global matrices.
-    elem.Assemble(KE, FE, lm, G, F, K);
+    elem.Assemble<double>(KE, FE, lm, G, F, K);
   }
 }
 
@@ -207,7 +207,7 @@ void LECSM::GetStiff(vector<type> x, vector<type> y,
     elem.GetElemStiff<type>(x1, x2, y1, y2, tE, tw, tt, locP, gm, lm, KE, FE);
     
     // Assemble the element contributions into the global matrices.
-    elem.Assemble(KE, FE, lm, G, F, K);
+    elem.Assemble<type>(KE, FE, lm, G, F, K);
   }
 }
 
