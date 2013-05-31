@@ -293,18 +293,13 @@ void Element::GetElemStiff(type x1, type x2, type y1, type y2,
   T[5][5] = 1;
 
   // Calculate the global element stiffness matrix
-  vector< vector<type> > Tt(nen*3, vector<type>(nen*3));
-  //matrixTranspose(T, nen*3, nen*3, Tt);  
-  for (int i = 0; i < 3*nen; i++) 
-    for (int j = 0; j < 3*nen; j++)
-      Tt[j][i] = T[i][j];
   vector< vector<type> > KT(nen*3, vector<type>(nen*3));
   //matrixMult(KEloc, nen*3, nen*3, T, nen*3, nen*3, KT);
   for (int i = 0; i < 3*nen; i++) {
     for (int j = 0; j < 3*nen; j++) {
       KT[i][j] = 0;
       for (int k = 0; k < 3*nen; k++)
-        KT[i][j] += KEloc[i][k]*T[j][j];
+        KT[i][j] += KEloc[i][k]*T[k][j];
     }
   }
   //matrixMult(Tt, nen*3, nen*3, KT, nen*3, nen*3, KE);  
@@ -312,7 +307,7 @@ void Element::GetElemStiff(type x1, type x2, type y1, type y2,
     for (int j = 0; j < 3*nen; j++) {
       KE[i][j] = 0;
       for (int k = 0; k < 3*nen; k++)
-        KE[i][j] += Tt[i][k]*KT[j][j];
+        KE[i][j] += T[k][i]*KT[k][j];
     }
   }
 
@@ -331,7 +326,6 @@ void Element::GetElemStiff(type x1, type x2, type y1, type y2,
 
   // Clean-up
   T.clear();
-  Tt.clear();
   KEloc.clear();
 }
 

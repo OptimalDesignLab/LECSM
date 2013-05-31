@@ -770,7 +770,7 @@ void LECSM::CalcResidual(vector<type> x, vector<type> y, vector<type> res)
   for (int i = 0; i < ndof; i++) {
     v_dof[i] = 0;
     for (int j = 0; j < ndof; j++)
-      v_dof[i] += K[i][j]*u_dof[i];
+      v_dof[i] += K[i][j]*u_dof[j];
   }  
   //matrixVecMult(K, ndof, ndof, u_dof, ndof, v_dof);
   u_dof.clear();
