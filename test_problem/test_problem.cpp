@@ -105,7 +105,7 @@ int main() {
   InnerProdVector wrkU(3*nnp,1.0), wrkP(nnp,1.0), wrkQ(3*nnp,1.0);
   InnerProdVector outU(nnp,0.0), outP(3*nnp,0.0);
   InnerProdVector vU(nnp,0.0), vP(3*nnp,0.0), vQ(nnp,0.0), vR(3*nnp,0.0);
-  double delta = 1.e-3;
+  double delta = 1.e-0; //1.e-7;
 
   // Perform (dS/dp) product with the built-in routine
   csm.Calc_dSdp_Product(wrkP, vP);
@@ -115,22 +115,24 @@ int main() {
 
   cout << "difference between wrkQ_dSdp_wrkP and wrkP_TransdSdp_wrkQ = "
        << wrkQ_dSdp_wrkP - wrkP_TransdSdp_wrkQ << endl;
-  
+
   // Calculate (dS/dp) with finite differencing
   csm.CalcResidual();
   InnerProdVector res1 = csm.get_res();
   vector< vector<double> > dSdp(3*nnp, vector<double>(nnp));
   for (int i=0; i<nnp; i++) {
     // preturb the pressure on i-th node
-    press(i) += delta;
+    //press(i) += delta;
+    double eps = delta; //std::max(delta*press(i), 1e-16);
+    press(i) += eps;
     csm.set_press(press);
     csm.CalcResidual();
     InnerProdVector res2 = csm.get_res();
     for (int j=0; j<3*nnp; j++) {
-      dSdp[j][i] = (res2(j) - res1(j))/delta;
+      dSdp[j][i] = (res2(j) - res1(j))/eps;
     }
     // reset the perturbation before testing next node
-    press(i) -= delta;
+    press(i) -= eps;
   }
 
   // Multiply (dS/dP)*wrkP
@@ -142,7 +144,7 @@ int main() {
     }
     //printf("|\n");
   }
-
+  
   // Validate by seeing if the difference is zero
   // printf("(dS/dp) product:\n");
   // printf("---------------------\n");

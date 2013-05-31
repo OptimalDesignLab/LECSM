@@ -910,7 +910,7 @@ void LECSM::Solve()
 
   // Solve the global Kd = F system
   vector<double> disp(ndof);
-  int maxIt = 100;
+  int maxIt = 10000;
   int iter = CGSolve(K, ndof, ndof, F, ndof, maxIt, disp);
   printf("LECSM: Solver converged in %i iterations!\n", iter);
 
