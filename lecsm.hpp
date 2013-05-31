@@ -129,17 +129,32 @@ public:
    */
 	void InitGlobalVecs(vector<double>& G, vector<double>& F);
 
-	/*!
+  /*!
    * \brief calculates the global stiffness matrix and associated vectors
    * \param[in] gm - global equation number mapping
    * \param[out] G - global prescribed displacements vector
    * \param[out] F - global prescribed nodal forcing
    * \param[out] K - global stiffness matrix
    */
-	void GetStiff(vector< vector< vector<int> > >& gm,
-								vector<double>& G, vector<double>& F,
+  void GetStiff(vector< vector< vector<int> > >& gm,
+                vector<double>& G, vector<double>& F,
                 vector< vector<double> >& K);
 
+  /*!
+   * \brief calculates stiffness matrix and rhs vectors for arbitrary types
+   * \param[in] x - nodal x coordinates (assumes linear elements!!!)
+   * \param[in] y - nodal y coordinates (assumes linear elements!!!)
+   * \param[in] gm - global equation number mapping
+   * \param[out] G - global prescribed displacements vector
+   * \param[out] F - global prescribed nodal forcing
+   * \param[out] K - global stiffness matrix
+   */
+  template <typename type>
+  void GetStiff(vector<type> x, vector<type> y,
+                vector< vector< vector<int> > >& gm,
+                vector<type>& G, vector<type>& F,
+                vector< vector<type> >& K);
+  
   /*!
    * \brief preconditions the input vector with the diagonal of the system stiffness matrix
    * \param[in] in - un-preconditioned vector
@@ -178,10 +193,17 @@ public:
   /*!
    * \brief product for FD derivative residual w.r.t nodal coordinates
    * \param[in] in - multiplied vector (num_nodes)
-   * \param[out] out - resultant vector (num_nodes)
+   * \param[out] out - resultant vector (3*num_nodes)
    */
   void CalcFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
 
+  /*!
+   * \brief directional deriviative of residual with respect to y coordinates
+   * \param[in] in - multiplied vector (num_nodes)
+   * \param[out] out - resultant vector (3*num_nodes)
+   */
+  void CalcCmplx_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
+  
   /*!
    * \brief transpose product for FD derivative residual w.r.t nodal coordinates
    * \param[in] in - multiplied vector (num_nodes)
@@ -208,11 +230,20 @@ public:
    */
 	void CalcCoordsAndArea();
 
-	/*!
+  /*!
    * \brief calculates the CSM residual based on displacements in u_
    */
-	void CalcResidual();
+  void CalcResidual();
 
+  /*!
+   * \brief calculates the CSM residual based on displacements in u_
+   * \param[in] x - vector of nodal x coordinates
+   * \param[in] y - vector of nodal y coordinates
+   * \param[out] res - CSM residual, Ku - f
+   */
+  template <typename type>
+  void CalcResidual(vector<type> x, vector<type> y, vector<type> res);
+  
   /*!
    * \brief inspects the solver mesh
    */

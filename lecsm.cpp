@@ -171,6 +171,59 @@ void LECSM::GetStiff(vector< vector< vector<int> > >& gm,
 
 // =====================================================================
 
+template <typename type>
+void LECSM::GetStiff(vector<type> x, vector<type> y,
+                     vector< vector< vector<int> > >& gm,
+                     vector<type>& G, vector<type>& F,
+                     vector< vector<type> >& K)
+{
+  // Loop over all elements, assuming that each face is an element.
+  Element elem;
+  int nel = geom_.nel;
+  Node nodeL, nodeR;
+  type tE = static_cast<type>(E_);
+  type tw = static_cast<type>(w_);
+  type tt = static_cast<type>(t_);
+  for (int i=0; i<nel; i++)
+  {
+    // Get information about the element.
+    elem = geom_.allElems[i];
+    int nen = elem.nen;
+
+    // Calculate the stiffness matrix
+    vector< vector< vector<int> > >
+        lm(3, vector< vector<int> >(nen, vector<int>(2)));
+    vector< vector<type> > KE(nen*3, vector<type>(nen*3));
+    vector<type> FE(nen*3);
+    nodeL = elem.adjNodes[0];
+    nodeR = elem.adjNodes[1];
+    vector<type> locP(2);
+    locP[0] = static_cast<type>(P_(nodeL.id));
+    locP[1] = static_cast<type>(P_(nodeR.id));
+    type x1 = x[nodeL.id];
+    type x2 = x[nodeR.id];
+    type y1 = y[nodeL.id];
+    type y2 = y[nodeR.id];
+    elem.GetElemStiff<type>(x1, x2, y1, y2, tE, tw, tt, locP, gm, lm, KE, FE);
+    
+    // Assemble the element contributions into the global matrices.
+    elem.Assemble(KE, FE, lm, G, F, K);
+  }
+}
+
+// explicit instantiations
+template void LECSM::GetStiff<double>(vector<double> x, vector<double> y,
+                                      vector< vector< vector<int> > >& gm,
+                                      vector<double>& G, vector<double>& F,
+                                      vector< vector<double> >& K);
+template void LECSM::GetStiff<complex<double> >(
+    vector<complex<double> > x, vector<complex<double> > y,
+    vector< vector< vector<int> > >& gm,
+    vector<complex<double> >& G, vector<complex<double> >& F,
+    vector< vector<complex<double> > >& K);
+
+// =====================================================================
+
 void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
 {
   // Map out the global equation numbers
@@ -384,6 +437,30 @@ void LECSM::CalcFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
   // Clean-up
   dSdy.clear();
 #endif
+}
+
+// =====================================================================
+
+void LECSM::CalcCmplx_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
+{
+  // complex Perturb the y coordinates
+  double eps = 1e-40;
+  vector<complex<double> > x_cmplx(nnp_), y_cmplx(nnp_), res_cmplx(3*nnp_);
+  for (int i = 0; i < nnp_; i++) {
+    x_cmplx[i] = (xCoords_(i), 0.0);
+    y_cmplx[i] = (yCoords_(i), eps*in(i));
+  }
+  
+  // Calculate the Residual at the unperturbed state
+  CalcResidual<complex<double> >(x_cmplx, y_cmplx, res_cmplx);
+
+  // compute the product
+  for (int i = 0; i < 3*nnp_; i++)
+    out(i) = imag(res_cmplx[i])/eps;
+
+  x_cmplx.clear();
+  y_cmplx.clear();
+  res_cmplx.clear();
 }
 
 // =====================================================================
@@ -643,6 +720,87 @@ void LECSM::CalcResidual()
   }
   res_dof.clear();
 }
+
+// =====================================================================
+
+template <typename type>
+void LECSM::CalcResidual(vector<type> x, vector<type> y, vector<type> res)
+{
+  // Generate the global equation number mapping
+  int nnp = geom_.nnp;
+  vector< vector< vector<int> > >
+      gm(3, vector< vector<int> >(nnp, vector<int>(2)));
+  geom_.SetupEq(gm);
+
+  // Initiate global vectors used in the solver
+  int ndof = geom_.ndof;
+  int ndog = geom_.ndog;
+  vector<type> G(ndog), F(ndof);
+  vector< vector<type> > K(ndof, vector<type>(ndof, 0.0));
+  Node nd;
+  for (int b = 0; b < nnp; b++) {
+    nd = geom_.allNodes[b];
+    for (int i = 0; i < 3; i++) {
+      if (nd.type[i]==1)        // DoF - possible nodal load
+        F.push_back(static_cast<type>(nd.forceBC[i])); // store the nodal load
+      else                       // prescribed BC
+        if (nd.type[i]==2)      // DoG - non-zero BC
+          G.push_back(static_cast<type>(nd.dispBC[i]));// store the essential BC
+    }
+  }
+  //InitGlobalVecs(G, F);
+
+  // Calculate the stiffness matrix and the forcing vector
+  GetStiff(x, y, gm, G, F, K);
+  G.clear();
+
+  int p;
+  vector<type> u_dof(ndof);
+  for (int i=0; i<nnp; i++) {
+    for (int j=0; j<3; j++) {
+      if (gm[j][i][0] == 1) {
+        p = gm[j][i][1];
+        u_dof[p] = static_cast<type>(u_(3*i+j));
+      }
+    }
+  }
+
+  // Calculate the K*u product
+  vector<type> v_dof(ndof);
+  for (int i = 0; i < ndof; i++) {
+    v_dof[i] = 0;
+    for (int j = 0; j < ndof; j++)
+      v_dof[i] += K[i][j]*u_dof[i];
+  }  
+  //matrixVecMult(K, ndof, ndof, u_dof, ndof, v_dof);
+  u_dof.clear();
+  K.clear();
+
+  // Form the Ku-f residual for free nodes
+  vector<type> res_dof(ndof);
+  for (int i=0; i<ndof; i++)
+    res_dof[i] = v_dof[i] - F[i];
+  v_dof.clear();
+  F.clear();
+
+  // Assemble the whole residual
+  for (int i=0; i<nnp; i++) {
+    for (int j=0; j<3; j++) {
+      if (gm[j][i][0] == 1)   // node is free
+        res[3*i+j] = res_dof[gm[j][i][1]];
+      else  // node is fixed
+        res[3*i+j] = static_cast<type>(0.0);
+    }
+  }
+  res_dof.clear();
+}
+
+// explicit instantiations
+template void LECSM::CalcResidual<double>(vector<double> x, vector<double> y,
+                                          vector<double> res);
+template void LECSM::CalcResidual<complex<double> >(
+    vector<complex<double> > x, vector<complex<double> > y,
+    vector<complex<double> > res);
 
 // =====================================================================
 

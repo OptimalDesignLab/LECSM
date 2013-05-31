@@ -88,6 +88,24 @@ public:
                 	  vector< vector< vector<int> > >& lm,
                 	  vector< vector<double> >& KE, vector<double>& FE);
 
+  /*!
+   * \brief construct the element stiffness matrix and forcing vector
+   * \param[in] E - young's modulus
+   * \param[in] w - element width
+   * \param[in] t - element thickness
+   * \param[in] P - pressures on element nodes
+   * \param[in] gm - global equation number mapping
+   * \param[out] lm - local equation number mapping
+   * \param[out] KE - element stiffness matrix
+   * \param[out] FE - element forcing vector
+   */
+  template <typename type>
+  void GetElemStiff(type x1, type x2, type y1, type y2,
+                    type E, type w, type t, vector<type>& P,
+                    vector< vector< vector<int> > >& gm,
+                    vector< vector< vector<int> > >& lm,
+                    vector< vector<type> >& KE, vector<type>& FE);
+
 	/*!
    * \brief assemble the element contributions into global matrix/vectors
    * \param[in] KE - element stiffness matrix
@@ -97,10 +115,19 @@ public:
    * \param[out] K - global stiffness matrix
    * \param[out] F - global forcing vector
    */
-	void Assemble(vector< vector<double> >& KE, vector<double>& FE,
-								vector< vector< vector<int> > >& lm,
-								vector<double>& G, vector<double>& F,
+  void Assemble(vector< vector<double> >& KE, vector<double>& FE,
+                vector< vector< vector<int> > >& lm,
+                vector<double>& G, vector<double>& F,
                 vector< vector<double> >& K);
+
+  /*!
+   * \brief complex version of the Assemble
+   */
+  void Assemble(vector< vector<complex<double> > >& KE,
+                vector<complex<double> >& FE,
+                vector< vector< vector<int> > >& lm,
+                vector<complex<double> >& G, vector<complex<double> >& F,
+                vector< vector<complex<double> > >& K);
 };
 
 // =====================================================================

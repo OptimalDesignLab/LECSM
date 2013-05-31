@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <complex>
 #include "./1D_mesh_tools.hpp"
 #include "./matrix_tools.hpp"
 using namespace std;
@@ -197,10 +198,201 @@ void Element::GetElemStiff(double E, double w, double t, vector<double>& P,
 
 // =====================================================================
 
+template <typename type>
+void Element::GetElemStiff(type x1, type x2, type y1, type y2,
+                           type E, type w, type t, vector<type>& P,
+                           vector< vector< vector<int> > >& gm,
+                           vector< vector< vector<int> > >& lm,
+                           vector< vector<type> >& KE, vector<type>& FE) {
+  // some necessary constants
+  type t12 = static_cast<type>(12.0);
+  type t6  = static_cast<type>(6.0);
+  type t4  = static_cast<type>(4.0);
+  type t2  = static_cast<type>(2.0);
+  
+  // Recover the left and right nodes of the element
+  Node nodeL = adjNodes[0];
+  Node nodeR = adjNodes[1];
+  int idL = nodeL.id;
+  int idR = nodeR.id;
+
+  // Calculate the element length and orientation
+  type length = sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1));
+  type cosine = (x2 - x1)/length;
+  type sine = (y2 - y1)/length;
+
+  // Generate the local equation mapping
+  lm[0][0][0] = gm[0][idL][0];
+  lm[0][0][1] = gm[0][idL][1];
+  lm[0][1][0] = gm[0][idR][0];
+  lm[0][1][1] = gm[0][idR][1];
+  lm[1][0][0] = gm[1][idL][0];
+  lm[1][0][1] = gm[1][idL][1];
+  lm[1][1][0] = gm[1][idR][0];
+  lm[1][1][1] = gm[1][idR][1];
+  lm[2][0][0] = gm[2][idL][0];
+  lm[2][0][1] = gm[2][idL][1];
+  lm[2][1][0] = gm[2][idR][0];
+  lm[2][1][1] = gm[2][idR][1];
+
+  // Calculate the local element stiffness matrix
+  type A = w*t; // cross section area of the element
+  type I = w*(t*t*t)/t12; // area moment of inertia of the beam element x-section
+  vector< vector<type> > KEloc(nen*3, vector<type>(nen*3));
+  KEloc[0][0] = A*E/length;
+  KEloc[0][1] = 0;
+  KEloc[0][2] = 0;
+  KEloc[0][3] = -A*E/length;
+  KEloc[0][4] = 0;
+  KEloc[0][5] = 0;
+  KEloc[1][0] = 0;
+  KEloc[1][1] = t12*E*I/(length*length*length);
+  KEloc[1][2] = t6*E*I/(length*length);
+  KEloc[1][3] = 0;
+  KEloc[1][4] = -t12*E*I/(length*length*length);
+  KEloc[1][5] = t6*E*I/(length*length);
+  KEloc[2][0] = 0;
+  KEloc[2][1] = t6*E*I/(length*length);
+  KEloc[2][2] = t4*E*I/length;
+  KEloc[2][3] = 0;
+  KEloc[2][4] = -t6*E*I/(length*length);
+  KEloc[2][5] = t2*E*I/length;
+  KEloc[3][0] = -A*E/length;
+  KEloc[3][1] = 0;
+  KEloc[3][2] = 0;
+  KEloc[3][3] = A*E/length;
+  KEloc[3][4] = 0;
+  KEloc[3][5] = 0;
+  KEloc[4][0] = 0;
+  KEloc[4][1] = -t12*E*I/(length*length*length);
+  KEloc[4][2] = -t6*E*I/(length*length);
+  KEloc[4][3] = 0;
+  KEloc[4][4] = t12*E*I/(length*length*length);
+  KEloc[4][5] = -t6*E*I/(length*length);
+  KEloc[5][0] = 0;
+  KEloc[5][1] = t6*E*I/(length*length);
+  KEloc[5][2] = t2*E*I/length;
+  KEloc[5][3] = 0;
+  KEloc[5][4] = -t6*E*I/(length*length);
+  KEloc[5][5] = t4*E*I/length;
+
+  // Create the local to global transformation matrix
+  vector< vector<type> > T(nen*3, vector<type>(nen*3));
+  for (int i=0; i<6; i++) 
+    for (int j=0; j<6; j++)
+      T[i][j] = 0;   
+  T[0][0] = cosine;
+  T[0][1] = sine;
+  T[1][0] = -sine;
+  T[1][1] = cosine;
+  T[2][2] = 1;
+  T[3][3] = cosine;
+  T[3][4] = sine;
+  T[4][3] = -sine;
+  T[4][4] = cosine;
+  T[5][5] = 1;
+
+  // Calculate the global element stiffness matrix
+  vector< vector<type> > Tt(nen*3, vector<type>(nen*3));
+  //matrixTranspose(T, nen*3, nen*3, Tt);  
+  for (int i = 0; i < 3*nen; i++) 
+    for (int j = 0; j < 3*nen; j++)
+      Tt[j][i] = T[i][j];
+  vector< vector<type> > KT(nen*3, vector<type>(nen*3));
+  //matrixMult(KEloc, nen*3, nen*3, T, nen*3, nen*3, KT);
+  for (int i = 0; i < 3*nen; i++) {
+    for (int j = 0; j < 3*nen; j++) {
+      KT[i][j] = 0;
+      for (int k = 0; k < 3*nen; k++)
+        KT[i][j] += KEloc[i][k]*T[j][j];
+    }
+  }
+  //matrixMult(Tt, nen*3, nen*3, KT, nen*3, nen*3, KE);  
+  for (int i = 0; i < 3*nen; i++) {
+    for (int j = 0; j < 3*nen; j++) {
+      KE[i][j] = 0;
+      for (int k = 0; k < 3*nen; k++)
+        KE[i][j] += Tt[i][k]*KT[j][j];
+    }
+  }
+
+  // Create the element forcing vector due to pressure
+  // Add in the nodal force contributions
+  type q1 = -P[0]*w;
+  type q2 = -P[1]*w;
+  type f1 = (length/t6)*((t2*q1)+q2);
+  type f2 = (length/t6)*(q1+(t2*q2));
+  FE[0] = (-sine*f1) + static_cast<type>(nodeL.forceBC[0]);
+  FE[1] = (cosine*f1) + static_cast<type>(nodeL.forceBC[1]);
+  FE[2] = static_cast<type>(nodeL.forceBC[2]);
+  FE[3] = (-sine*f2) + static_cast<type>(nodeR.forceBC[0]);
+  FE[4] = (cosine*f2) + static_cast<type>(nodeR.forceBC[1]);
+  FE[5] = static_cast<type>(nodeR.forceBC[2]);
+
+  // Clean-up
+  T.clear();
+  Tt.clear();
+  KEloc.clear();
+}
+
+// explicit instantiations
+template void Element::GetElemStiff<double>(
+    double x1, double x2, double y1, double y2,
+    double E, double w, double t, vector<double>& P,
+    vector< vector< vector<int> > >& gm,
+    vector< vector< vector<int> > >& lm,
+    vector< vector<double> >& KE, vector<double>& FE);
+
+template void Element::GetElemStiff<complex<double> >(
+    complex<double> x1, complex<double> x2, complex<double> y1,
+    complex<double> y2, complex<double> E, complex<double> w,
+    complex<double> t, vector<complex<double> >& P,
+    vector< vector< vector<int> > >& gm,
+    vector< vector< vector<int> > >& lm,
+    vector< vector<complex<double> > >& KE, vector<complex<double> >& FE);
+
+// =====================================================================
+
 void Element::Assemble(vector< vector<double> >& KE, vector<double>& FE,
                        vector< vector< vector<int> > >& lm,
                        vector<double>& G, vector<double>& F,
                        vector< vector<double> >& K)
+{
+  int p = 0;
+  for (int a = 0; a < nen; a++)
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      if (lm[i][a][0] == 1) // dof
+      {
+        int P = lm[i][a][1];
+        F[P] = F[P] + FE[p];
+        int q = 0;
+        for (int b = 0; b < nen; b++)
+        {
+          for (int j = 0; j < 3; j++)
+          {
+            int Q = lm[j][b][1];
+            if (lm[j][b][0] == 1) // dof
+              {K[P][Q] = K[P][Q] + KE[p][q];}
+            else if (lm[j][b][0] == 2) // dog
+              {F[P] = F[P] - G[Q]*KE[p][q];}
+            q++;
+          } // end j loop over nsd
+        } // end b loop over nen (columns)
+      }
+      p++;
+    } // end i loop over nsd
+  } // end a loop over nen (rows)
+}
+
+// =====================================================================
+
+void Element::Assemble(vector< vector<complex<double> > >& KE,
+                       vector<complex<double> >& FE,
+                       vector< vector< vector<int> > >& lm,
+                       vector<complex<double> >& G, vector<complex<double> >& F,
+                       vector< vector<complex<double> > >& K)
 {
   int p = 0;
   for (int a = 0; a < nen; a++)
