@@ -400,43 +400,6 @@ void LECSM::CalcFD_dSdy_Product(InnerProdVector& in, InnerProdVector& out)
   // Reset coordinates
   yCoords_ = save_y;
   UpdateMesh();
-  
-#if 0
-  // NOTE: Cannot find the paper on easier finite differencing
-  // ~~~ FIX THIS LATER ~~~
-  ResetCoords();
-  InnerProdVector save_y = yCoords_;
-  double delta = 1.e-6;
-  InnerProdVector disp(3*nnp_, 1.0);
-  set_u(disp);
-
-  CalcResidual();
-  InnerProdVector res0 = get_res();
-
-  // Calculate derivative via finite differencing
-  vector< vector<double> > dSdy(3*nnp_, vector<double>(nnp_, 0.0));
-  for (int i=0; i < nnp_; i++) {
-    yCoords_(i) += delta;
-    UpdateMesh();
-    CalcResidual();
-    InnerProdVector res1 = get_res();
-    for (int j=0; j < 3*nnp_; j++) {
-      dSdy[j][i] = (res1(j) - res0(j))/delta;
-    }
-    yCoords_(i) = save_y(i);
-    UpdateMesh();
-  }
-
-  // Perform the multiplication
-  for (int i=0; i < 3*nnp_; i++) {
-    out(i) = 0;
-    for (int j=0; j < nnp_; j++)
-      out(i) += dSdy[i][j] * in(j);
-  }
-
-  // Clean-up
-  dSdy.clear();
-#endif
 }
 
 // =====================================================================
@@ -943,7 +906,74 @@ void LECSM::Solve()
 
 // ======================================================================
 
+void LECSM::StiffDiagProduct(const InnerProdVector & in,
+							        InnerProdVector & out)
+{
+   // Set up the global adjacency mapping
+   int nnp = geom_.nnp;
+   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
+  	geom_.SetupEq(gm);
+
+   // Initiate global vectors used in the solver
+   int ndof = geom_.ndof;
+   int ndog = geom_.ndog;
+   vector<double> G(ndog), F(ndof);
+   vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
+   InitGlobalVecs(G, F);
+
+   // Calculate the stiffness matrix and the forcing vector
+   GetStiff(gm, G, F, K);
+   G.clear();
+   F.clear();
+   vector<double> Kdiag(ndof, 0.0);
+   for (int i=0; i<ndof; i++)
+      Kdiag[i] = K[i][i];
+   K.clear();
+
+   // Perform the diagonal multiplication
+   int p;
+   vector<double> u_dof(ndof);
+   for (int i=0; i<nnp; i++) {
+     for (int j=0; j<3; j++) {
+       if (gm[j][i][0] == 1) {
+         p = gm[j][i][1];
+         u_dof[p] = in(3*i+j);
+       }
+     }
+   }
+
+   // Calculate the K*u product
+   vector<double> v_dof(ndof);
+   for (int i=0; i<ndof; i++)
+      v_dof[i] = Kdiag[i]*u_dof[i];
+   u_dof.clear();
+   Kdiag.clear();
+
+   // Assemble the whole product
+   for (int i=0; i<nnp; i++) {
+     for (int j=0; j<3; j++) {
+       if (gm[j][i][0] == 1)   // node is free
+         out(3*i+j) = v_dof[gm[j][i][1]];
+       else  // node is fixed
+         out(3*i+j) = 0.0;
+     }
+   }
+
+   // Clean-up
+   gm.clear();
+   v_dof.clear();
+}
+
+// ======================================================================
+
 void StiffnessVectorProduct::operator()(const InnerProdVector & u, 
                                         InnerProdVector & v) { 
   solver_->Calc_dSdu_Product(u, v);
+}
+
+// ======================================================================
+
+void ApproxStiff::operator()(const InnerProdVector & u, 
+                             InnerProdVector & v) { 
+   solver_->StiffDiagProduct(u, v);
 }
