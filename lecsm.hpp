@@ -30,12 +30,11 @@ public:
    */
 	LECSM(int nnp) :
 			area_(nnp, 0.0),
-      gm_((3, vector< vector<int> >(nnp, vector<int>(2))))
 			xCoords_(nnp, 0.0),
       yCoords_(nnp, 0.0),
 			res_(3*nnp, 0.0),
 			u_(3*nnp, 0.0),
-			P_(nnp, 0.0) { nnp_ = nnp; mesh_flag = 0; }
+			P_(nnp, 0.0) { nnp_ = nnp; }
 
 	/*!
    * \brief default destructor
@@ -276,13 +275,6 @@ public:
    */
 	void Solve();
 
-  /*!
-   * \brief calculates the (dS/du) diagonal vector product for preconditioning
-   * \param[in] in - multiplied vector (3*num_nodes)
-   * \param[out] out - resultant vector (3*num_nodes)
-   */
-  void StiffDiagProduct(const InnerProdVector & in, InnerProdVector & out);
-
 private:
 	InnerProdVector area_;
 	InnerProdVector xCoords_;
@@ -290,6 +282,7 @@ private:
 	InnerProdVector res_;
 	InnerProdVector u_;
 	InnerProdVector P_;
+  vector< vector<double> > K_;
 	int nnp_;
 	double E_, w_, t_, h_;
 	Mesh geom_;
@@ -345,6 +338,15 @@ class ApproxStiff :
   }
 
   ~ApproxStiff() {} ///< class destructor
+
+  /*!
+   * \brief operator that applies the approximate inverse Stiffness matrix.
+   * \param[in] u - vector that is being preconditioned
+   * \param[out] v - vector that is the result of the preconditioning
+   */
+  void operator()(InnerProdVector & u, InnerProdVector & v) {
+    v = u;
+  }
 
  private:
   LECSM * solver_; ///< used to access the Stiffness matrix
