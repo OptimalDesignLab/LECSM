@@ -863,7 +863,7 @@ int LECSM::SolveFor(InnerProdVector & rhs, const int & max_iter,
   ofstream fout(filename.c_str());
   int precond_calls = 0;
   u_ = 0.0;
-  kona::MINRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
+  kona::FGMRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
                precond_calls, fout);  
   return precond_calls;
 }
@@ -943,7 +943,80 @@ void LECSM::Solve()
 
 // ======================================================================
 
+<<<<<<< HEAD
+void LECSM::StiffDiagProduct(InnerProdVector & in,
+							 InnerProdVector & out)
+{
+   // Set up the global adjacency mapping
+   int nnp = geom_.nnp;
+   vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
+  	geom_.SetupEq(gm);
+
+   // Initiate global vectors used in the solver
+   int ndof = geom_.ndof;
+   int ndog = geom_.ndog;
+   vector<double> G(ndog), F(ndof);
+   vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
+   InitGlobalVecs(G, F);
+
+   // Calculate the stiffness matrix and the forcing vector
+   GetStiff(gm, G, F, K);
+   G.clear();
+   F.clear();
+   vector<double> Kdiag(ndof, 0.0);
+   for (int i=0; i<ndof; i++)
+      Kdiag[i] = K[i][i];
+   K.clear();
+
+   // Perform the diagonal multiplication
+   int p;
+   vector<double> u_dof(ndof);
+   for (int i=0; i<nnp; i++) {
+     for (int j=0; j<3; j++) {
+       if (gm[j][i][0] == 1) {
+         p = gm[j][i][1];
+         u_dof[p] = in(3*i+j);
+       }
+     }
+   }
+
+   // Calculate the K*u product
+   vector<double> v_dof(ndof);
+   for (int i=0; i<ndof; i++)
+      v_dof[i] = Kdiag[i]*u_dof[i];
+   u_dof.clear();
+   Kdiag.clear();
+
+   // Assemble the whole product
+   for (int i=0; i<nnp; i++) {
+     for (int j=0; j<3; j++) {
+       if (gm[j][i][0] == 1)   // node is free
+         out(3*i+j) = v_dof[gm[j][i][1]];
+       else  // node is fixed
+         out(3*i+j) = 0.0;
+     }
+   }
+
+   // Clean-up
+   gm.clear();
+   v_dof.clear();
+}
+
+// ======================================================================
+
+=======
+>>>>>>> master
 void StiffnessVectorProduct::operator()(const InnerProdVector & u, 
                                         InnerProdVector & v) { 
   solver_->Calc_dSdu_Product(u, v);
 }
+<<<<<<< HEAD
+
+// ======================================================================
+
+void ApproxStiff::operator()(InnerProdVector & u, 
+                             InnerProdVector & v) { 
+   solver_->StiffDiagProduct(u, v);
+}
+=======
+>>>>>>> master
