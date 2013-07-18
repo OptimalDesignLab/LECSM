@@ -339,18 +339,7 @@ class ApproxStiff :
 
   ~ApproxStiff() {} ///< class destructor
 
-<<<<<<< HEAD
   void operator()(InnerProdVector & u, InnerProdVector & v);
-=======
-  /*!
-   * \brief operator that applies the approximate inverse Stiffness matrix.
-   * \param[in] u - vector that is being preconditioned
-   * \param[out] v - vector that is the result of the preconditioning
-   */
-  void operator()(InnerProdVector & u, InnerProdVector & v) {
-    v = u;
-  }
->>>>>>> master
 
  private:
   LECSM * solver_; ///< used to access the Stiffness matrix

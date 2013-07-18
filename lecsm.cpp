@@ -943,7 +943,6 @@ void LECSM::Solve()
 
 // ======================================================================
 
-<<<<<<< HEAD
 void LECSM::StiffDiagProduct(InnerProdVector & in,
 							 InnerProdVector & out)
 {
@@ -1004,13 +1003,10 @@ void LECSM::StiffDiagProduct(InnerProdVector & in,
 
 // ======================================================================
 
-=======
->>>>>>> master
 void StiffnessVectorProduct::operator()(const InnerProdVector & u, 
                                         InnerProdVector & v) { 
   solver_->Calc_dSdu_Product(u, v);
 }
-<<<<<<< HEAD
 
 // ======================================================================
 
@@ -1018,5 +1014,3 @@ void ApproxStiff::operator()(InnerProdVector & u,
                              InnerProdVector & v) { 
    solver_->StiffDiagProduct(u, v);
 }
-=======
->>>>>>> master
