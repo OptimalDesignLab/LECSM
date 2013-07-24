@@ -275,6 +275,11 @@ public:
    */
 	void Solve();
 
+  /*!
+   * \brief vector product with the diagonal terms of the stiffness matrix
+   */
+  void StiffDiagProduct(InnerProdVector & in, InnerProdVector & out);
+
 private:
 	InnerProdVector area_;
 	InnerProdVector xCoords_;
