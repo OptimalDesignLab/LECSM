@@ -277,8 +277,10 @@ public:
 
   /*!
    * \brief vector product with the diagonal terms of the stiffness matrix
+   * \param[in] in - multiplied vector (3*num_nodes)
+   * \param[out] out - resultant vector (3*num_nodes)
    */
-  void StiffDiagProduct(InnerProdVector & in, InnerProdVector & out);
+  void StiffDiagProduct(const InnerProdVector & in, InnerProdVector & out);
 
 private:
 	InnerProdVector area_;

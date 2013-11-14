@@ -943,8 +943,8 @@ void LECSM::Solve()
 
 // ======================================================================
 
-void LECSM::StiffDiagProduct(InnerProdVector & in,
-							 InnerProdVector & out)
+void LECSM::StiffDiagProduct(const InnerProdVector & in,
+                             InnerProdVector & out)
 {
    // Set up the global adjacency mapping
    int nnp = geom_.nnp;

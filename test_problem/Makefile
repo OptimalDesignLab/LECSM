@@ -7,7 +7,7 @@ SHELL = /bin/sh
 .PHONY: default call tags test_problem clean
 
 # compiler
-CXX= gcc 
+CXX= g++
 
 # c preprocessor options
 CPPFLAGS= -cpp -DDEBUG -DBOOST_UBLAS_ENABLE_PROXY_SHORTCUTS
