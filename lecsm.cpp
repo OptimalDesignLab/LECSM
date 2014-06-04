@@ -11,6 +11,7 @@
 #include <string>
 #include "./lecsm.hpp"
 #include "./matrix_tools.hpp"
+#include <boost/property_tree/ptree.hpp>
 
 using namespace std;
 
@@ -855,16 +856,24 @@ int LECSM::SolveFor(InnerProdVector & rhs, const int & max_iter,
   }
 
   kona::MatrixVectorProduct<InnerProdVector>* 
-      mat_vec = new StiffnessVectorProduct(this);
+      mat_vec = new StiffnessVectorProduct(*this, this->geom_);
   kona::Preconditioner<InnerProdVector>*
-      precond = new ApproxStiff(this);
+      precond = new ApproxStiff(*this, this->geom_);
 
   string filename = "lecsm_krylov.dat";
   ofstream fout(filename.c_str());
   int precond_calls = 0;
   u_ = 0.0;
-  kona::FGMRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
-               precond_calls, fout);  
+  //  kona::FGMRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
+  //             precond_calls, fout);
+  kona::MINRESSolver<InnerProdVector> solver;
+  solver.SubspaceSize(max_iter);
+  using boost::property_tree::ptree;
+  ptree input_params, output_params;
+  input_params.put<double>("tol", tol);
+  input_params.put<bool>("check", true);
+  solver.Solve(input_params, rhs, u_, *mat_vec, *precond, output_params, fout);
+  precond_calls = output_params.get<int>("iters");
   return precond_calls;
 }
 
@@ -1003,14 +1012,102 @@ void LECSM::StiffDiagProduct(const InnerProdVector & in,
 
 // ======================================================================
 
+StiffnessVectorProduct::StiffnessVectorProduct(LECSM& solver, Mesh& geom) {
+  // Generate the global equation number mapping
+  nnp_ = geom.nnp;
+  gm_.resize(3, vector< vector<int> >(nnp_, vector<int>(2)));
+  geom.SetupEq(gm_);
+  // Build the stiffness matrix
+  ndof_ = geom.ndof;
+  int ndog = geom.ndog;
+  vector<double> G(ndog), F(ndof_);
+  K_.resize(ndof_, vector<double>(ndof_, 0.0));
+  u_dof_.resize(ndof_, 0.0);
+  v_dof_.resize(ndof_, 0.0);
+  solver.InitGlobalVecs(G, F);
+  solver.GetStiff(gm_, G, F, K_);  
+} 
+
+// ======================================================================
+
 void StiffnessVectorProduct::operator()(const InnerProdVector & u, 
-                                        InnerProdVector & v) { 
-  solver_->Calc_dSdu_Product(u, v);
+                                        InnerProdVector & v) {
+  // move u into reduced vector
+  for (int i = 0; i < nnp_; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (gm_[j][i][0] == 1)
+        u_dof_[gm_[j][i][1]] = u(3*i+j);
+    }
+  }  
+  // Perform the multiplication.
+  for (int i = 0; i < ndof_; i++) {
+    v_dof_[i] = 0.0;
+    for (int j = 0; j < ndof_; j++)
+      v_dof_[i] += K_[i][j]*u_dof_[j];
+  }
+  // move v_dof_ into the full vector
+  for (int i = 0; i < nnp_; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (gm_[j][i][0] == 1) // node is free
+        v(3*i+j) = v_dof_[gm_[j][i][1]];
+      else // node is fixed
+        v(3*i+j) = 0.0;
+    }
+  }
+}
+
+// ======================================================================
+
+ApproxStiff::ApproxStiff(LECSM& solver, Mesh& geom) {
+  // Generate the global equation number mapping
+  nnp_ = geom.nnp;
+  gm_.resize(3, vector< vector<int> >(nnp_, vector<int>(2)));
+  geom.SetupEq(gm_);
+  // Build the stiffness matrix
+  ndof_ = geom.ndof;
+  int ndog = geom.ndog;
+  vector<double> G(ndog), F(ndof_);
+  vector< vector<double> > K(ndof_, vector<double>(ndof_, 0.0));
+  Kdiag_.resize(ndof_, 0.0);
+  u_dof_.resize(ndof_, 0.0);
+  v_dof_.resize(ndof_, 0.0);
+  solver.InitGlobalVecs(G, F);
+  solver.GetStiff(gm_, G, F, K);
+  G.clear();
+  F.clear();
+
+  // Calculate the stiffness matrix and the forcing vector
+  for (int i = 0; i < ndof_; i++) {
+    if (K[i][i] < 1e-16)
+      Kdiag_[i] = 1.0;
+    else
+      Kdiag_[i] = 1.0/K[i][i];
+  }
+  K.clear();
 }
 
 // ======================================================================
 
 void ApproxStiff::operator()(InnerProdVector & u, 
                              InnerProdVector & v) { 
-   solver_->StiffDiagProduct(u, v);
+  //solver_->StiffDiagProduct(u, v);
+  // move u into reduced vector
+  for (int i = 0; i < nnp_; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (gm_[j][i][0] == 1)
+        u_dof_[gm_[j][i][1]] = u(3*i+j);
+    }
+  }  
+  // Perform the multiplication with the diagonal matrix.
+  for (int i = 0; i < ndof_; i++)
+    v_dof_[i] = Kdiag_[i]*u_dof_[i];
+  // move v_dof_ into the full vector
+  for (int i = 0; i < nnp_; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (gm_[j][i][0] == 1) // node is free
+        v(3*i+j) = v_dof_[gm_[j][i][1]];
+      else // node is fixed
+        v(3*i+j) = 0.0;
+    }
+  }
 }

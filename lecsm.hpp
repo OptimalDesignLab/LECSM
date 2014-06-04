@@ -307,11 +307,10 @@ class StiffnessVectorProduct :
 
   /*!
    * \brief default constructor
-   * \param[in] csm_solver - a linear elasticity solver (defines product)
+   * \param[in] solver - a linear elasticity solver (defines product)
+   * \param[in] geom - 1D Mesh object corresponding to solver
    */
-  StiffnessVectorProduct(LECSM * solver) {
-    solver_ = solver; 
-  } 
+  StiffnessVectorProduct(LECSM& solver, Mesh& geom);
 
   ~StiffnessVectorProduct() {} ///< class destructor
 
@@ -323,7 +322,12 @@ class StiffnessVectorProduct :
   void operator()(const InnerProdVector & u, InnerProdVector & v);
 
  private:
-  LECSM * solver_; ///< used to access the Matrix-Vector product routine
+  int nnp_; // number of nodes in mesh
+  int ndof_; // number of degrees of freedom (size of matrix)
+  vector< vector< vector<int> > > gm_; // global equation number mapping
+  vector< vector<double> > K_; // stiffness matrix
+  vector<double> u_dof_; // used to store reduced (dof only) input vector
+  vector<double> v_dof_; // used to store reduced (dof only) output vector
 };
 
 // ======================================================================
@@ -338,16 +342,20 @@ class ApproxStiff :
 
   /*!
    * \brief default constructor
-   * \param[in] euler_solver - a Quasi1DEuler solver to access precond.
+   * \param[in] solver - a linear elasticity solver (defines product)
+   * \param[in] geom - 1D Mesh object corresponding to solver
    */
-  ApproxStiff(LECSM * solver) {
-    solver_ = solver; 
-  }
+  ApproxStiff(LECSM& solver, Mesh& geom);
 
   ~ApproxStiff() {} ///< class destructor
 
   void operator()(InnerProdVector & u, InnerProdVector & v);
 
  private:
-  LECSM * solver_; ///< used to access the Stiffness matrix
+  int nnp_; // number of nodes in mesh
+  int ndof_; // number of degrees of freedom (size of matrix)
+  vector< vector< vector<int> > > gm_; // global equation number mapping
+  vector<double> Kdiag_; // inverse of the stiffness matrix diagonal
+  vector<double> u_dof_; // used to store reduced (dof only) input vector
+  vector<double> v_dof_; // used to store reduced (dof only) output vector
 };

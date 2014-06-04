@@ -20,14 +20,15 @@ int main() {
 	LECSM csm(nnp);
 
 	// Define material properties
-	double E = 69000000000; // Young's Modulus (Rubber) (Pa)
-	double t = 0.1;				  // Thickness of the beam elements (meters)
-	double w = 1;					  // Width of the beam elements (meters)
-	double h = 1;						// Maximum nozzle height (meters)
+        // JEH: I changed these to match constants used in the Aero-Struct problem
+	double E = 1e7; //69000000000; // Young's Modulus (Rubber) (Pa)
+	double t = 0.01; //0.1;        // Thickness of the beam elements (meters)
+	double w = 0.01;               // Width of the beam elements (meters)
+	double h = 200.0; // 1.0;      // Maximum nozzle height (meters)
 	csm.set_material(E, t, w, h);
 
 	// Create problem mesh
-	double length = 10.0;
+	double length = 1.0; //10.0;
   InnerProdVector x_coord(nnp, 0.0);
   InnerProdVector y_coord(nnp, 0.0);
   InnerProdVector area(nnp, 0.0);
@@ -89,7 +90,7 @@ int main() {
   InnerProdVector press(nnp, 50.0);
 #else
   InnerProdVector press(nnp, 0.0);
-  double maxP = 10000000;
+  double maxP = 100000.0; //10000000;
   for (int i=0; i<nnp; i++)
     press(i) = (maxP*(x_coord(i)-length)*x_coord(i)/25)+maxP;
 #endif
@@ -205,7 +206,7 @@ int main() {
   InnerProdVector u = csm.get_u();
 
   InnerProdVector rhs(3*nnp, 1.0);
-  csm.SolveFor(rhs);
+  csm.SolveFor(rhs, 1000, 1e-6);
 #endif
 
 // =====================================================================
