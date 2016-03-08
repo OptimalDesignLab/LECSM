@@ -8,8 +8,8 @@
 #pragma once
 #include <vector>
 #include "./1D_mesh_tools.hpp"
-#include "../quasi_1d_euler/inner_prod_vector.hpp"
-#include "../krylov.h"
+#include "../Quasi1DEuler/inner_prod_vector.hpp"
+#include "../krylov.hpp"
 
 using namespace std;
 

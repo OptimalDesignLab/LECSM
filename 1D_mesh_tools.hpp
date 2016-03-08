@@ -7,7 +7,7 @@
 
 #pragma once
 #include <vector>
-#include "../quasi_1d_euler/inner_prod_vector.hpp"
+#include "../Quasi1DEuler/inner_prod_vector.hpp"
 using namespace std;
 
 // =====================================================================
