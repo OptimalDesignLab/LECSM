@@ -9,7 +9,7 @@
 #include <vector>
 #include "./1D_mesh_tools.hpp"
 #include "../quasi_1d_euler/inner_prod_vector.hpp"
-#include <krylov.hpp>
+#include "../krylov.h"
 
 using namespace std;
 
@@ -46,7 +46,7 @@ public:
    * \returns xCoords_ member value
    */
   InnerProdVector & get_x() { return xCoords_; }
-  
+
   /*!
    * \brief returns a vector y coordinates for each node
    * \returns yCoords_ member value
@@ -78,7 +78,7 @@ public:
    * \param[in] w - nozzle fixed width
    * \param[in] h - nozzle max height (at y_coord = 0)
    */
-	void set_material(double E, double t, double w, double h) { 
+	void set_material(double E, double t, double w, double h) {
       E_ = E; t_ = t; w_ = w; h_ = h;}
 
 	/*!
@@ -154,7 +154,7 @@ public:
                 vector< vector< vector<int> > >& gm,
                 vector<type>& G, vector<type>& F,
                 vector< vector<type> >& K);
-  
+
   /*!
    * \brief preconditions the input vector with the diagonal of the system stiffness matrix
    * \param[in] in - un-preconditioned vector
@@ -203,7 +203,7 @@ public:
    * \param[out] out - resultant vector (3*num_nodes)
    */
   void CalcCmplx_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
-  
+
   /*!
    * \brief transpose product for FD derivative residual w.r.t nodal coordinates
    * \param[in] in - multiplied vector (num_nodes)
@@ -217,7 +217,7 @@ public:
    * \param[out] out - resultant vector (num_nodes)
    */
   void CalcTransCmplx_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
-  
+
 	/*!
    * \brief calculates the (dS/dp)*vector product
    * \param[in] in - multiplied vector (num_nodes)
@@ -251,7 +251,7 @@ public:
   template <typename type>
   void CalcResidual(const vector<type>& x, const vector<type>& y,
                     vector<type>& res);
-  
+
   /*!
    * \brief inspects the solver mesh
    */
