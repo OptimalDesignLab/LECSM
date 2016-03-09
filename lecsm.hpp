@@ -22,6 +22,11 @@ using namespace std;
 class LECSM {
 public:
 
+  /*
+   * \brief empty constructor
+   */
+  LECSM() {}
+
 	/*!
    * \brief class constructor
    * \param[in] nnp - number of nodes in the domain
