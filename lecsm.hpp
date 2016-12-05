@@ -278,7 +278,7 @@ public:
 	/*!
    * \brief independent solution of a CSM problem using conjugate gradient
    */
-	void Solve();
+	void Solve(bool info=false);
 
   /*!
    * \brief vector product with the diagonal terms of the stiffness matrix

@@ -98,7 +98,8 @@ void printMatrix(vector< vector<double> >& A, int rowA, int colA)
 // ======================================================================
 
 int CGSolve(vector< vector<double> >& K, int rowK, int colK,
-             vector<double>& F, int rowF, int maxIt, vector<double>& Disp)
+            vector<double>& F, int rowF, int maxIt, vector<double>& Disp,
+            bool info)
 {  
   // Sanity check for system dimensions
   if (colK != rowF)
@@ -164,6 +165,6 @@ int CGSolve(vector< vector<double> >& K, int rowK, int colK,
     tol = rtr_new;
   }
   // return number of iterations
-  std::cout << "CGSolve: tol = " << sqrt(tol) << std::endl;
+  if (info) std::cout << "CGSolve: tol = " << sqrt(tol) << std::endl;
   return iter;
 }

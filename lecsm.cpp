@@ -879,7 +879,7 @@ int LECSM::SolveFor(InnerProdVector & rhs, const int & max_iter,
 
 // =====================================================================
 
-void LECSM::Solve()
+void LECSM::Solve(bool info)
 {
 #if 0
   geom_.InspectElements();
@@ -921,7 +921,7 @@ void LECSM::Solve()
   vector<double> disp(ndof);
   int maxIt = 10000;
   int iter = CGSolve(K, ndof, ndof, F, ndof, maxIt, disp);
-  printf("LECSM: Solver converged in %i iterations!\n", iter);
+  if (info) printf("LECSM: Solver converged in %i iterations!\n", iter);
 
 #if 0
   // Assemble the nodal displacements

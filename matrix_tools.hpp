@@ -65,4 +65,5 @@ void printMatrix(vector< vector<double> >& A, int rowA, int colA);
  * \param[out] Disp - solution vector
  */
 int CGSolve(vector< vector<double> >& K, int rowK, int colK,
-             vector<double>& F, int rowF, int maxIt, vector<double>& Disp);
+            vector<double>& F, int rowF, int maxIt, vector<double>& Disp, 
+            bool info=false);
