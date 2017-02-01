@@ -227,34 +227,10 @@ template void LECSM::GetStiff<complex<double> >(
 
 void LECSM::Precondition(InnerProdVector& in, InnerProdVector& out)
 {
-  // Map out the global equation numbers
-  int nnp = geom_.nnp;
-  vector< vector< vector<int> > > gm(3, vector< vector<int> >(nnp, vector<int>(2)));
-  geom_.SetupEq(gm);
-
-  // Calculate the stiffness matrix (dS/du)
-  int ndof = geom_.ndof;
-  int ndog = geom_.ndog;
-  vector<double> G(ndog), F(ndof);
-  vector< vector<double> > K(ndof, vector<double>(ndof, 0.0));
-  InitGlobalVecs(G, F);
-  GetStiff(gm, G, F, K);
-  G.clear();
-  F.clear();
-
-  for (int i=0; i<nnp; i++) {
-    Node node = geom_.allNodes[i];
-    for (int j=0; j<3; j++) {
-      if (node.type[j] == 1) {
-        int p = gm[j][node.id][1];
-        out(3*i+j) = in(3*i+j)/K[p][p];
-      }
-      else
-        out(3*i+j) = in(3*i+j);
-    }
-  }
-  K.clear();
-
+  kona::Preconditioner<InnerProdVector>*
+          precond = new GaussSeidelPrecond(*this, this->geom_);
+  (*precond)(in, out);
+  delete precond;
 }
 
 // =====================================================================
@@ -858,22 +834,22 @@ int LECSM::SolveFor(InnerProdVector & rhs, const int & max_iter,
   kona::MatrixVectorProduct<InnerProdVector>* 
       mat_vec = new StiffnessVectorProduct(*this, this->geom_);
   kona::Preconditioner<InnerProdVector>*
-      precond = new ApproxStiff(*this, this->geom_);
+      precond = new GaussSeidelPrecond(*this, this->geom_);
 
   string filename = "lecsm_krylov.dat";
   ofstream fout(filename.c_str());
   int precond_calls = 0;
   u_ = 0.0;
-  //  kona::FGMRES(max_iter, tol, rhs, u_, *mat_vec, *precond,
-  //             precond_calls, fout);
-  kona::MINRESSolver<InnerProdVector> solver;
-  solver.SubspaceSize(max_iter);
-  using boost::property_tree::ptree;
-  ptree input_params, output_params;
-  input_params.put<double>("tol", tol);
-  input_params.put<bool>("check", true);
-  solver.Solve(input_params, rhs, u_, *mat_vec, *precond, output_params, fout);
-  precond_calls = output_params.get<int>("iters");
+  kona::FGMRES<InnerProdVector>(max_iter, tol, rhs, u_, *mat_vec, *precond,
+             precond_calls, fout);
+//  kona::MINRESSolver<InnerProdVector> solver;
+//  solver.SubspaceSize(max_iter);
+//  using boost::property_tree::ptree;
+//  ptree input_params, output_params;
+//  input_params.put<double>("tol", tol);
+//  input_params.put<bool>("check", true);
+//  solver.Solve(input_params, rhs, u_, *mat_vec, *precond, output_params, fout);
+//  precond_calls = output_params.get<int>("iters");
   return precond_calls;
 }
 
@@ -1058,7 +1034,7 @@ void StiffnessVectorProduct::operator()(const InnerProdVector & u,
 
 // ======================================================================
 
-ApproxStiff::ApproxStiff(LECSM& solver, Mesh& geom) {
+DiagonalPrecond::DiagonalPrecond(LECSM& solver, Mesh& geom) {
   // Generate the global equation number mapping
   nnp_ = geom.nnp;
   gm_.resize(3, vector< vector<int> >(nnp_, vector<int>(2)));
@@ -1088,7 +1064,7 @@ ApproxStiff::ApproxStiff(LECSM& solver, Mesh& geom) {
 
 // ======================================================================
 
-void ApproxStiff::operator()(InnerProdVector & u, 
+void DiagonalPrecond::operator()(InnerProdVector & u, 
                              InnerProdVector & v) { 
   //solver_->StiffDiagProduct(u, v);
   // move u into reduced vector
@@ -1102,6 +1078,67 @@ void ApproxStiff::operator()(InnerProdVector & u,
   for (int i = 0; i < ndof_; i++)
     v_dof_[i] = Kdiag_[i]*u_dof_[i];
   // move v_dof_ into the full vector
+  for (int i = 0; i < nnp_; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (gm_[j][i][0] == 1) // node is free
+        v(3*i+j) = v_dof_[gm_[j][i][1]];
+      else // node is fixed
+        v(3*i+j) = 0.0;
+    }
+  }
+}
+
+// ======================================================================
+
+GaussSeidelPrecond::GaussSeidelPrecond(LECSM& solver, Mesh& geom) {
+  // Generate the global equation number mapping
+  nnp_ = geom.nnp;
+  gm_.resize(3, vector< vector<int> >(nnp_, vector<int>(2)));
+  geom.SetupEq(gm_);
+  // Build the stiffness matrix
+  ndof_ = geom.ndof;
+  int ndog = geom.ndog;
+  vector<double> G(ndog), F(ndof_);
+  K_.resize(ndof_, vector<double>(ndof_, 0.0));
+  u_dof_.resize(ndof_, 0.0);
+  v_dof_.resize(ndof_, 0.0);
+  solver.InitGlobalVecs(G, F);
+  solver.GetStiff(gm_, G, F, K_);
+  max_iters_ = ndof_;
+}
+
+// ======================================================================
+
+void GaussSeidelPrecond::operator()(InnerProdVector & u,
+                                    InnerProdVector & v) {
+    
+  // move RHS into reduced vector
+  for (int i = 0; i < nnp_; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (gm_[j][i][0] == 1)
+        u_dof_[gm_[j][i][1]] = u(3*i+j);
+    }
+  }
+
+  // Gauss Seidel iterations
+  double v_old;
+  int flag;
+  for (int k = 0; k < max_iters_; k++) {
+    flag = 0;
+    // iterations over DOFs
+    for (int i = 0; i < ndof_; i++) {
+      v_old = v_dof_[i];
+      v_dof_[i] = u_dof_[i];
+      for (int j = 0; j < ndof_; j++) {
+        if (j != i) v_dof_[i] -= K_[i][j]*v_dof_[j];
+      }
+      v_dof_[i] *= 1.0/K_[i][i];
+      if (fabs(v_old - v_dof_[i]) <= 1e-8) flag++;
+    }
+    if (flag == ndof_) break;
+  } 
+
+  // move the solution into the output vector
   for (int i = 0; i < nnp_; i++) {
     for (int j = 0; j < 3; j++) {
       if (gm_[j][i][0] == 1) // node is free

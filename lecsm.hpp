@@ -27,24 +27,24 @@ public:
    */
   LECSM() {}
 
-	/*!
+    /*!
    * \brief class constructor
    * \param[in] nnp - number of nodes in the domain
    * \param[in] x - vector of x coordinates
    * \param[in] y - vector of y coordinates
    */
-	LECSM(int nnp) :
-			area_(nnp, 0.0),
-			xCoords_(nnp, 0.0),
+    LECSM(int nnp) :
+            area_(nnp, 0.0),
+            xCoords_(nnp, 0.0),
       yCoords_(nnp, 0.0),
-			res_(3*nnp, 0.0),
-			u_(3*nnp, 0.0),
-			P_(nnp, 0.0) { nnp_ = nnp; }
+            res_(3*nnp, 0.0),
+            u_(3*nnp, 0.0),
+            P_(nnp, 0.0) { nnp_ = nnp; }
 
-	/*!
+    /*!
    * \brief default destructor
    */
-	~LECSM() {}
+    ~LECSM() {}
 
   /*!
    * \brief returns a vector x coordinates for each node
@@ -58,17 +58,17 @@ public:
    */
   InnerProdVector & get_y() { return yCoords_; }
 
-	/*!
+    /*!
    * \brief returns a vector areas at each node
    * \returns area_ member value
    */
-	InnerProdVector & get_area() { return area_; }
+    InnerProdVector & get_area() { return area_; }
 
-	/*!
+    /*!
    * \brief returns the CSM residual vector
    * \returns res_ member value
    */
-	InnerProdVector & get_res() { return res_; }
+    InnerProdVector & get_res() { return res_; }
 
   /*!
    * \brief returns the CSM displacement vector
@@ -76,34 +76,34 @@ public:
    */
   InnerProdVector & get_u() { return u_; }
 
-	/*!
+    /*!
    * \brief sets the material properties for the CSM solver
    * \param[in] E - young's modulus
    * \param[in] t - 2D beam thickness
    * \param[in] w - nozzle fixed width
    * \param[in] h - nozzle max height (at y_coord = 0)
    */
-	void set_material(double E, double t, double w, double h) {
+    void set_material(double E, double t, double w, double h) {
       E_ = E; t_ = t; w_ = w; h_ = h;}
 
-	/*!
+    /*!
    * \brief updates the CSM mesh with displacements
    * \param[in] u_csm - vector of displacements (3*nnp)
    */
-	void set_u(const InnerProdVector & u_csm) { u_ = u_csm; }
+    void set_u(const InnerProdVector & u_csm) { u_ = u_csm; }
 
-	/*!
+    /*!
    * \brief sets the pressure values at each node
    * \param[in] press - vector of pressure values (nnp)
    */
-	void set_press(const InnerProdVector & press) { P_ = press; }
+    void set_press(const InnerProdVector & press) { P_ = press; }
 
-	/*!
+    /*!
    * \brief generates the initial problem mesh
    * \param[in] x - vector of node x coordinates
    * \param[in] y - vector of node y coordinates
    */
-	void GenerateMesh(const InnerProdVector & x, const InnerProdVector & y);
+    void GenerateMesh(const InnerProdVector & x, const InnerProdVector & y);
 
   /*!
    * \brief resets the solver coordinates to the nodal coordinates of the geometry
@@ -120,19 +120,19 @@ public:
    */
   void UpdateMesh();
 
-	/*!
+    /*!
    * \brief set the nodal boundary conditions (displacements and forcing)
    * \param[in] BCtype - type of BC (displacement or forcing)
    * \param[in] BYval - value of BC
    */
-	void SetBoundaryConds(const InnerProdVector & BCtype, const InnerProdVector & BCval);
+    void SetBoundaryConds(const InnerProdVector & BCtype, const InnerProdVector & BCval);
 
-	/*!
+    /*!
    * \brief initializes the global vectors used in the solver
    * \param[out] G - global prescribed displacements vector
    * \param[out] F - global prescribed nodal forcing
    */
-	void InitGlobalVecs(vector<double>& G, vector<double>& F);
+    void InitGlobalVecs(vector<double>& G, vector<double>& F);
 
   /*!
    * \brief calculates the global stiffness matrix and associated vectors
@@ -167,19 +167,19 @@ public:
    */
   void Precondition(InnerProdVector& in, InnerProdVector& out);
 
-	/*!
+    /*!
    * \brief calculates the (dS/du)*vector product
    * \param[in] in - multiplied vector (3*num_nodes)
    * \param[out] out - resultant vector (3*num_nodes)
    */
   void Calc_dSdu_Product(const InnerProdVector& in, InnerProdVector& out);
 
-	/*!
+    /*!
    * \brief calculates the (dA/du)*vector product
    * \param[in] in - multiplied vector (3*num_nodes)
    * \param[out] out - resultant vector (num_nodes)
    */
-	void Calc_dAdu_Product(InnerProdVector& in, InnerProdVector& out);
+    void Calc_dAdu_Product(InnerProdVector& in, InnerProdVector& out);
 
   /*!
    * \brief calculates the [(dA/du)^T]*vector product
@@ -223,12 +223,12 @@ public:
    */
   void CalcTransCmplx_dSdy_Product(InnerProdVector& in, InnerProdVector& out);
 
-	/*!
+    /*!
    * \brief calculates the (dS/dp)*vector product
    * \param[in] in - multiplied vector (num_nodes)
    * \param[out] out - resultant vector (3*num_nodes)
    */
-	void Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out);
+    void Calc_dSdp_Product(InnerProdVector& in, InnerProdVector& out);
 
   /*!
    * \brief calculates the [(dS/dp)^T]*vector product
@@ -240,7 +240,7 @@ public:
   /*!
    * \brief calculates the displaced coordinates and nozzle area
    */
-	void CalcCoordsAndArea();
+    void CalcCoordsAndArea();
 
   /*!
    * \brief calculates the CSM residual based on displacements in u_
@@ -275,10 +275,10 @@ public:
   int SolveFor(InnerProdVector & rhs, const int & max_iter = 1000,
                const double & tol = 1e-6);
 
-	/*!
+    /*!
    * \brief independent solution of a CSM problem using conjugate gradient
    */
-	void Solve(bool info=false);
+    void Solve(bool info=false);
 
   /*!
    * \brief vector product with the diagonal terms of the stiffness matrix
@@ -288,16 +288,16 @@ public:
   void StiffDiagProduct(const InnerProdVector & in, InnerProdVector & out);
 
 private:
-	InnerProdVector area_;
-	InnerProdVector xCoords_;
+    InnerProdVector area_;
+    InnerProdVector xCoords_;
   InnerProdVector yCoords_;
-	InnerProdVector res_;
-	InnerProdVector u_;
-	InnerProdVector P_;
+    InnerProdVector res_;
+    InnerProdVector u_;
+    InnerProdVector P_;
   vector< vector<double> > K_;
-	int nnp_;
-	double E_, w_, t_, h_;
-	Mesh geom_;
+    int nnp_;
+    double E_, w_, t_, h_;
+    Mesh geom_;
 };
 
 // ======================================================================
@@ -338,10 +338,10 @@ class StiffnessVectorProduct :
 // ======================================================================
 
 /*!
- * \class ApproxStiff
+ * \class DiagonalPrecond
  * \brief specialization of preconditioner for lecsm
  */
-class ApproxStiff :
+class DiagonalPrecond :
     public kona::Preconditioner<InnerProdVector> {
  public:
 
@@ -350,9 +350,9 @@ class ApproxStiff :
    * \param[in] solver - a linear elasticity solver (defines product)
    * \param[in] geom - 1D Mesh object corresponding to solver
    */
-  ApproxStiff(LECSM& solver, Mesh& geom);
+  DiagonalPrecond(LECSM& solver, Mesh& geom);
 
-  ~ApproxStiff() {} ///< class destructor
+  ~DiagonalPrecond() {} ///< class destructor
 
   void operator()(InnerProdVector & u, InnerProdVector & v);
 
@@ -360,7 +360,38 @@ class ApproxStiff :
   int nnp_; // number of nodes in mesh
   int ndof_; // number of degrees of freedom (size of matrix)
   vector< vector< vector<int> > > gm_; // global equation number mapping
-  vector<double> Kdiag_; // inverse of the stiffness matrix diagonal
+  vector<double> Kdiag_; // stiffness matrix diagonal
   vector<double> u_dof_; // used to store reduced (dof only) input vector
   vector<double> v_dof_; // used to store reduced (dof only) output vector
+};
+
+// ======================================================================
+
+/*!
+ * \class GaussSeidelPrecond
+ * \brief specialization of preconditioner for lecsm
+ */
+class GaussSeidelPrecond :
+        public kona::Preconditioner<InnerProdVector> {
+public:
+
+    /*!
+     * \brief default constructor
+     * \param[in] solver - a linear elasticity solver (defines product)
+     * \param[in] geom - 1D Mesh object corresponding to solver
+     */
+    GaussSeidelPrecond(LECSM& solver, Mesh& geom);
+
+    ~GaussSeidelPrecond() {} ///< class destructor
+
+    void operator()(InnerProdVector & u, InnerProdVector & v);
+
+private:
+    int nnp_; // number of nodes in mesh
+    int ndof_; // number of degrees of freedom (size of matrix)
+    int max_iters_;
+    vector< vector< vector<int> > > gm_; // global equation number mapping
+    vector< vector<double> > K_; // stiffness matrix
+    vector<double> u_dof_; // used to store reduced (dof only) input vector
+    vector<double> v_dof_; // used to store reduced (dof only) output vector
 };
