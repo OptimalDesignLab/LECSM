@@ -1104,7 +1104,7 @@ GaussSeidelPrecond::GaussSeidelPrecond(LECSM& solver, Mesh& geom) {
   v_dof_.resize(ndof_, 0.0);
   solver.InitGlobalVecs(G, F);
   solver.GetStiff(gm_, G, F, K_);
-  max_iters_ = ndof_;
+  max_iters_ = 10;
 }
 
 // ======================================================================
@@ -1121,24 +1121,19 @@ void GaussSeidelPrecond::operator()(InnerProdVector & u,
   }
 
   // Gauss Seidel iterations
-  double v_old;
-  int flag;
   for (int k = 0; k < max_iters_; k++) {
-    flag = 0;
     // iterations over DOFs
     for (int i = 0; i < ndof_; i++) {
-      v_old = v_dof_[i];
       v_dof_[i] = u_dof_[i];
       for (int j = 0; j < ndof_; j++) {
         if (j != i) v_dof_[i] -= K_[i][j]*v_dof_[j];
       }
       v_dof_[i] *= 1.0/K_[i][i];
-      if (fabs(v_old - v_dof_[i]) <= 1e-8) flag++;
     }
-    if (flag == ndof_) break;
-  } 
+  }
 
   // move the solution into the output vector
+  v = 0.0;
   for (int i = 0; i < nnp_; i++) {
     for (int j = 0; j < 3; j++) {
       if (gm_[j][i][0] == 1) // node is free
