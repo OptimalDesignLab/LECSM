@@ -12,20 +12,9 @@ Quasi 1D Euler solver as part of the code MDA evaluation for multidisciplinary
 design optimization applications. 
 
 Repository for the aero-structural optimization project can be found here:
-https://bitbucket.org/denera/aero_struct_mda
+https://github.com/OptimalDesignLab/ElasticNozzleMDO
 _________________________________________________________________________________
-DEPENDENCIES:
-+ Boost (http://www.boost.org/)
-+ Quasi 1D Euler solver (https://bitbucket.org/jehicken/quasi_1d_euler)
-+ Kona (https://bitbucket.org/jehicken/kona)
-_________________________________________________________________________________
-DESIGN NOTES:
 
-+ + Bspline::EvalAtPoints will give a vector of Y coordinates
-that correspond to a vector of X coordinates on the Bspline.
-Use this to create the mesh.
-
-+ Use Bspline::FitCurve to generate analytical Bspline from
-a set of X and Y coordinates. The optimizer will control only
-the Bspline, not the mesh coordinates.
+NOTE: This repository solely exists as a sub-module of the ElasticNozzleMDO problem. 
+It will not compile on its own.
 
